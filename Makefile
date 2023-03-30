@@ -13,8 +13,6 @@ coverage-report-visual: coverage-report
 	go tool cover -html=cover.out
 
 test unit-test:
-	@#go test -v -cover ./pkg/...
-	@echo "Not implemented"
-	@exit 0
+	go test -v -cover ./...
 
 .PHONY: all build clean coverage-report coverage-report-visual test unit-test
