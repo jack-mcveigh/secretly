@@ -11,7 +11,7 @@ import (
 
 const (
 	DefaultType    = "text"
-	DefaultVersion = "default"
+	DefaultVersion = "0"
 	TagIgnored     = "ignored"
 	TagKeyName     = "key_name"
 	TagSecretName  = "secret_name"
@@ -50,11 +50,11 @@ type Client interface {
 }
 
 type field struct {
-	secretType string
-	secretName string
-	keyName    string
-	version    string
-	value      reflect.Value
+	secretType    string
+	secretName    string
+	secretVersion string
+	mapKeyName    string // NOTE: Only used when secretType is "map"
+	value         reflect.Value
 }
 
 func newField(fValue reflect.Value, fStructField reflect.StructField) (field, error) {
@@ -72,7 +72,10 @@ func newField(fValue reflect.Value, fStructField reflect.StructField) (field, er
 		fValue = fValue.Elem()
 	}
 
-	sw, ok, err := parseOptionalStructTagKey[bool](fStructField, TagSplitWords)
+	var newField field
+
+	// Get the split_words value, setting it to false if not explicitly set
+	splitWordsEnabled, ok, err := parseOptionalStructTagKey[bool](fStructField, TagSplitWords)
 	if err != nil {
 		return field{}, StructTagError{
 			name: fStructField.Name,
@@ -81,10 +84,12 @@ func newField(fValue reflect.Value, fStructField reflect.StructField) (field, er
 		}
 	}
 	if !ok {
-		sw = false
+		splitWordsEnabled = false
 	}
 
-	t, ok, err := parseOptionalStructTagKey[string](fStructField, TagType)
+	// Get the type value, setting it to the default, "text", if not explicitly set.
+	// Also perform validation to ensure only valid types are provided
+	newField.secretType, ok, err = parseOptionalStructTagKey[string](fStructField, TagType)
 	if err != nil {
 		return field{}, StructTagError{
 			name: fStructField.Name,
@@ -93,9 +98,9 @@ func newField(fValue reflect.Value, fStructField reflect.StructField) (field, er
 		}
 	}
 	if !ok {
-		t = DefaultType
+		newField.secretType = DefaultType
 	}
-	switch t {
+	switch newField.secretType {
 	case "text", "map":
 	default:
 		return field{}, StructTagError{
@@ -105,7 +110,9 @@ func newField(fValue reflect.Value, fStructField reflect.StructField) (field, er
 		}
 	}
 
-	sn, ok, err := parseOptionalStructTagKey[string](fStructField, TagSecretName)
+	// Get the secret_name value, setting it to the field's name if not explicitly set.
+	// Split the words if the default value was used and split_words was set to true
+	newField.secretName, ok, err = parseOptionalStructTagKey[string](fStructField, TagSecretName)
 	if err != nil {
 		return field{}, StructTagError{
 			name: fStructField.Name,
@@ -114,16 +121,18 @@ func newField(fValue reflect.Value, fStructField reflect.StructField) (field, er
 		}
 	}
 	if !ok {
-		sn = fStructField.Name
-		if sw {
-			sn = splitWords(sn)
+		newField.secretName = fStructField.Name
+		if splitWordsEnabled {
+			newField.secretName = splitWords(newField.secretName)
 		}
 	}
 
-	var kn string
-	switch t {
+	// Get the key_name value, if the type is "map", and setting it to the field's name
+	// if not explicitly set. Split the words if the default value was used and
+	// split_words was set to true
+	switch newField.secretType {
 	case "map":
-		kn, ok, err = parseOptionalStructTagKey[string](fStructField, TagKeyName)
+		newField.mapKeyName, ok, err = parseOptionalStructTagKey[string](fStructField, TagKeyName)
 		if err != nil {
 			return field{}, StructTagError{
 				name: fStructField.Name,
@@ -132,9 +141,9 @@ func newField(fValue reflect.Value, fStructField reflect.StructField) (field, er
 			}
 		}
 		if !ok {
-			kn = fStructField.Name
-			if sw {
-				kn = splitWords(kn)
+			newField.mapKeyName = fStructField.Name
+			if splitWordsEnabled {
+				newField.mapKeyName = splitWords(newField.mapKeyName)
 			}
 		}
 	default:
@@ -147,7 +156,9 @@ func newField(fValue reflect.Value, fStructField reflect.StructField) (field, er
 		}
 	}
 
-	v, ok, err := parseOptionalStructTagKey[string](fStructField, TagVersion)
+	// Get the version value, setting it to the default, "default", if not explicitly
+	// set. Split the words if the default value was used and split_words was set to true
+	newField.secretVersion, ok, err = parseOptionalStructTagKey[string](fStructField, TagVersion)
 	if err != nil {
 		return field{}, StructTagError{
 			name: fStructField.Name,
@@ -156,18 +167,10 @@ func newField(fValue reflect.Value, fStructField reflect.StructField) (field, er
 		}
 	}
 	if !ok {
-		v = DefaultVersion
+		newField.secretVersion = DefaultVersion
 	}
 
-	f := field{
-		secretType: t,
-		secretName: sn,
-		keyName:    kn,
-		value:      fValue,
-		version:    v,
-	}
-
-	return f, nil
+	return newField, nil
 }
 
 func parseSpecification(spec interface{}) ([]field, error) {
@@ -187,6 +190,7 @@ func parseSpecification(spec interface{}) ([]field, error) {
 	for i := 0; i < sValue.NumField(); i++ {
 		f, fStructField := sValue.Field(i), sType.Field(i)
 
+		// Get the ignored value, setting it to false if not explicitly set
 		ignored, ok, err := parseOptionalStructTagKey[bool](fStructField, TagIgnored)
 		if err != nil {
 			return nil, StructTagError{
