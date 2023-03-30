@@ -21,10 +21,10 @@ const (
 )
 
 var (
-	ErrInvalidSpecification      = errors.New("specification must be a struct pointer")
-	ErrInvalidStructTagValue     = errors.New("invalid struct tag key value")
-	ErrInvalidSecretType         = errors.New("invalid secret type")
-	ErrTextDoesNotSupportKeyName = errors.New("type, \"text\", does not support key, \"key_name\"")
+	ErrInvalidSpecification           = errors.New("specification must be a struct pointer")
+	ErrInvalidStructTagValue          = errors.New("invalid struct tag key value")
+	ErrInvalidSecretType              = errors.New("invalid secret type")
+	ErrSecretTypeDoesNotSupportTagKey = errors.New("secret type does not support this tag key")
 
 	RegexMatchCapitals = regexp.MustCompile("([a-z0-9])([A-Z])")
 )
@@ -35,9 +35,11 @@ type StructTagError struct {
 	err  error
 }
 
-func (e StructTagError) Error() string {
-	return fmt.Sprintf("%s: %s: %s", e.name, e.key, e.err)
-}
+func (e StructTagError) Error() string { return fmt.Sprintf("%s: %s: %s", e.name, e.key, e.err) }
+
+func (e StructTagError) Is(target error) bool { return e.err == target }
+
+func (e StructTagError) Unwrap() error { return e.err }
 
 type Client interface {
 	Process(spec interface{}) error
@@ -119,7 +121,8 @@ func newField(fValue reflect.Value, fStructField reflect.StructField) (field, er
 	}
 
 	var kn string
-	if t == "map" {
+	switch t {
+	case "map":
 		kn, ok, err = parseOptionalStructTagKey[string](fStructField, TagKeyName)
 		if err != nil {
 			return field{}, StructTagError{
@@ -134,11 +137,13 @@ func newField(fValue reflect.Value, fStructField reflect.StructField) (field, er
 				kn = splitWords(kn)
 			}
 		}
-	} else if _, ok = fStructField.Tag.Lookup(TagKeyName); ok {
-		return field{}, StructTagError{
-			name: fStructField.Name,
-			key:  TagKeyName,
-			err:  ErrTextDoesNotSupportKeyName,
+	default:
+		if _, ok = fStructField.Tag.Lookup(TagKeyName); ok {
+			return field{}, StructTagError{
+				name: fStructField.Name,
+				key:  TagKeyName,
+				err:  ErrSecretTypeDoesNotSupportTagKey,
+			}
 		}
 	}
 
