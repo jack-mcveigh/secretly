@@ -33,15 +33,15 @@ type TextWithKeyNameSpecification struct {
 func TestParsingCorrectSpecification(t *testing.T) {
 	want := correctSpecificationFields
 
-	spec := CorrectSpecification{}
-	got, err := parseSpecification(&spec)
+	spec := CorrectSpecification{ignored: "testing"}
+	got, err := ParseSpecification(&spec)
 	if err != nil {
 		t.Errorf("Incorrect error. Want %v, got %v", nil, err)
 	}
 
 	// Don't check reflect.Value for equality
 	for i := range got {
-		got[i].value = reflect.Value{}
+		got[i].Value = reflect.Value{}
 	}
 
 	if !reflect.DeepEqual(want, got) {
@@ -51,7 +51,7 @@ func TestParsingCorrectSpecification(t *testing.T) {
 
 func TestParsingTextWithKeyNameSpecification(t *testing.T) {
 	spec := TextWithKeyNameSpecification{}
-	_, err := parseSpecification(&spec)
+	_, err := ParseSpecification(&spec)
 	if err != nil {
 		if !errors.Is(err, ErrSecretTypeDoesNotSupportTagKey) {
 			t.Errorf("Incorrect error. Want %v, got %v", ErrSecretTypeDoesNotSupportTagKey, err)
@@ -62,7 +62,7 @@ func TestParsingTextWithKeyNameSpecification(t *testing.T) {
 func TestParsingNonPointerSpecification(t *testing.T) {
 	spec := CorrectSpecification{}
 
-	_, err := parseSpecification(spec)
+	_, err := ParseSpecification(spec)
 	if err != nil {
 		if !errors.Is(err, ErrInvalidSpecification) {
 			t.Errorf("Incorrect error. Want %v, got %v", ErrInvalidSpecification, err)
@@ -72,69 +72,69 @@ func TestParsingNonPointerSpecification(t *testing.T) {
 
 var correctSpecificationFields = []field{
 	{
-		secretType:    DefaultType,
-		secretName:    "Text",
-		secretVersion: DefaultVersion,
-		mapKeyName:    "",
+		SecretType:    DefaultType,
+		SecretName:    "Text",
+		SecretVersion: DefaultVersion,
+		MapKeyName:    "",
 	},
 	{
-		secretType:    DefaultType,
-		secretName:    "Text_Split_Words",
-		secretVersion: DefaultVersion,
-		mapKeyName:    "",
+		SecretType:    DefaultType,
+		SecretName:    "Text_Split_Words",
+		SecretVersion: DefaultVersion,
+		MapKeyName:    "",
 	},
 	{
-		secretType:    DefaultType,
-		secretName:    "a_secret",
-		secretVersion: DefaultVersion,
-		mapKeyName:    "",
+		SecretType:    DefaultType,
+		SecretName:    "a_secret",
+		SecretVersion: DefaultVersion,
+		MapKeyName:    "",
 	},
 	{
-		secretType:    DefaultType,
-		secretName:    "TextVersion",
-		secretVersion: "latest",
-		mapKeyName:    "",
+		SecretType:    DefaultType,
+		SecretName:    "TextVersion",
+		SecretVersion: "latest",
+		MapKeyName:    "",
 	},
 	{
-		secretType:    DefaultType,
-		secretName:    "a_secret",
-		secretVersion: "latest",
-		mapKeyName:    "",
+		SecretType:    DefaultType,
+		SecretName:    "a_secret",
+		SecretVersion: "latest",
+		MapKeyName:    "",
 	},
 	{
-		secretType:    "map",
-		secretName:    "Map",
-		secretVersion: DefaultVersion,
-		mapKeyName:    "Map",
+		SecretType:    "map",
+		SecretName:    "Map",
+		SecretVersion: DefaultVersion,
+		MapKeyName:    "Map",
 	},
 	{
-		secretType:    "map",
-		secretName:    "Map_Split_Words",
-		secretVersion: DefaultVersion,
-		mapKeyName:    "Map_Split_Words",
+		SecretType:    "map",
+		SecretName:    "Map_Split_Words",
+		SecretVersion: DefaultVersion,
+		MapKeyName:    "Map_Split_Words",
 	},
 	{
-		secretType:    "map",
-		secretName:    "a_secret",
-		secretVersion: DefaultVersion,
-		mapKeyName:    "MapSecretName",
+		SecretType:    "map",
+		SecretName:    "a_secret",
+		SecretVersion: DefaultVersion,
+		MapKeyName:    "MapSecretName",
 	},
 	{
-		secretType:    "map",
-		secretName:    "MapKeyName",
-		secretVersion: DefaultVersion,
-		mapKeyName:    "a_key",
+		SecretType:    "map",
+		SecretName:    "MapKeyName",
+		SecretVersion: DefaultVersion,
+		MapKeyName:    "a_key",
 	},
 	{
-		secretType:    "map",
-		secretName:    "MapVersion",
-		secretVersion: "1",
-		mapKeyName:    "MapVersion",
+		SecretType:    "map",
+		SecretName:    "MapVersion",
+		SecretVersion: "1",
+		MapKeyName:    "MapVersion",
 	},
 	{
-		secretType:    "map",
-		secretName:    "a_secret",
-		secretVersion: "latest",
-		mapKeyName:    "a_key",
+		SecretType:    "map",
+		SecretName:    "a_secret",
+		SecretVersion: "latest",
+		MapKeyName:    "a_key",
 	},
 }
