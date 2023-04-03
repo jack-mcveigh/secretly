@@ -70,7 +70,7 @@ func TestParsingNonPointerSpecification(t *testing.T) {
 	}
 }
 
-var correctSpecificationFields = []field{
+var correctSpecificationFields = []Field{
 	{
 		SecretType:    DefaultType,
 		SecretName:    "Text",

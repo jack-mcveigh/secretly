@@ -1,4 +1,4 @@
-package internal
+package secretly
 
 import (
 	"encoding/json"
@@ -7,13 +7,16 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/jack-mcveigh/secretly/internal"
 	"gopkg.in/yaml.v3"
 )
 
-type ProcessOption func([]field) ([]field, error)
+type secretConfig struct {
+	Version string `json:"version" yaml:"version"`
+}
 
-func WithVersionsFromConfig(filePath string) ProcessOption {
-	return func(fields []field) ([]field, error) {
+func WithVersionsFromConfig(filePath string) internal.ProcessOption {
+	return func(fields []internal.Field) ([]internal.Field, error) {
 		b, err := os.ReadFile(filePath)
 		if err != nil {
 			return nil, err
@@ -44,8 +47,8 @@ func WithVersionsFromConfig(filePath string) ProcessOption {
 	}
 }
 
-func WithVersionsFromEnv(prefix string) ProcessOption {
-	return func(f []field) ([]field, error) {
+func WithVersionsFromEnv(prefix string) internal.ProcessOption {
+	return func(f []internal.Field) ([]internal.Field, error) {
 		return nil, errors.New("not implemented")
 	}
 }

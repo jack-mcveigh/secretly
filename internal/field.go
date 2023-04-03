@@ -13,7 +13,7 @@ const (
 	TagVersion     = "version"
 )
 
-type field struct {
+type Field struct {
 	SecretType    string
 	SecretName    string
 	SecretVersion string
@@ -22,7 +22,7 @@ type field struct {
 	Value         reflect.Value
 }
 
-func NewField(fValue reflect.Value, fStructField reflect.StructField) (field, error) {
+func NewField(fValue reflect.Value, fStructField reflect.StructField) (Field, error) {
 	// reduce pointer to value/struct pointer. Initialize underlying struct if needed
 	// TODO: maybe remove struct handling, might not be needed for this implementation
 	for fValue.Kind() == reflect.Ptr {
@@ -38,7 +38,7 @@ func NewField(fValue reflect.Value, fStructField reflect.StructField) (field, er
 	}
 
 	var (
-		newField field
+		newField Field
 		ok       bool
 		err      error
 	)
@@ -46,7 +46,7 @@ func NewField(fValue reflect.Value, fStructField reflect.StructField) (field, er
 	// Get the split_words value, setting it to false if not explicitly set
 	newField.SplitWords, ok, err = parseOptionalStructTagKey[bool](fStructField, TagSplitWords)
 	if err != nil {
-		return field{}, StructTagError{
+		return Field{}, StructTagError{
 			name: fStructField.Name,
 			key:  TagSplitWords,
 			err:  err,
@@ -60,7 +60,7 @@ func NewField(fValue reflect.Value, fStructField reflect.StructField) (field, er
 	// Also perform validation to ensure only valid types are provided
 	newField.SecretType, ok, err = parseOptionalStructTagKey[string](fStructField, TagType)
 	if err != nil {
-		return field{}, StructTagError{
+		return Field{}, StructTagError{
 			name: fStructField.Name,
 			key:  TagType,
 			err:  err,
@@ -72,7 +72,7 @@ func NewField(fValue reflect.Value, fStructField reflect.StructField) (field, er
 	switch newField.SecretType {
 	case "text", "map":
 	default:
-		return field{}, StructTagError{
+		return Field{}, StructTagError{
 			name: fStructField.Name,
 			key:  TagType,
 			err:  ErrInvalidSecretType,
@@ -83,7 +83,7 @@ func NewField(fValue reflect.Value, fStructField reflect.StructField) (field, er
 	// Split the words if the default value was used and split_words was set to true
 	newField.SecretName, ok, err = parseOptionalStructTagKey[string](fStructField, TagSecretName)
 	if err != nil {
-		return field{}, StructTagError{
+		return Field{}, StructTagError{
 			name: fStructField.Name,
 			key:  TagSecretName,
 			err:  err,
@@ -103,7 +103,7 @@ func NewField(fValue reflect.Value, fStructField reflect.StructField) (field, er
 	case "map":
 		newField.MapKeyName, ok, err = parseOptionalStructTagKey[string](fStructField, TagKeyName)
 		if err != nil {
-			return field{}, StructTagError{
+			return Field{}, StructTagError{
 				name: fStructField.Name,
 				key:  TagKeyName,
 				err:  err,
@@ -117,7 +117,7 @@ func NewField(fValue reflect.Value, fStructField reflect.StructField) (field, er
 		}
 	default:
 		if _, ok = fStructField.Tag.Lookup(TagKeyName); ok {
-			return field{}, StructTagError{
+			return Field{}, StructTagError{
 				name: fStructField.Name,
 				key:  TagKeyName,
 				err:  ErrSecretTypeDoesNotSupportTagKey,
@@ -129,7 +129,7 @@ func NewField(fValue reflect.Value, fStructField reflect.StructField) (field, er
 	// set. Split the words if the default value was used and split_words was set to true
 	newField.SecretVersion, ok, err = parseOptionalStructTagKey[string](fStructField, TagVersion)
 	if err != nil {
-		return field{}, StructTagError{
+		return Field{}, StructTagError{
 			name: fStructField.Name,
 			key:  TagVersion,
 			err:  err,
@@ -142,7 +142,7 @@ func NewField(fValue reflect.Value, fStructField reflect.StructField) (field, er
 	return newField, nil
 }
 
-func (f *field) Name() string {
+func (f *Field) Name() string {
 	name := f.SecretName
 
 	if f.SecretType == "map" {
