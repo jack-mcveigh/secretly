@@ -1,4 +1,4 @@
-package secretly
+package internal
 
 import (
 	"errors"
@@ -34,7 +34,7 @@ func TestParsingCorrectSpecification(t *testing.T) {
 	want := correctSpecificationFields
 
 	spec := CorrectSpecification{ignored: "testing"}
-	got, err := ParseSpecification(&spec)
+	got, err := Process(&spec)
 	if err != nil {
 		t.Errorf("Incorrect error. Want %v, got %v", nil, err)
 	}
@@ -51,7 +51,7 @@ func TestParsingCorrectSpecification(t *testing.T) {
 
 func TestParsingTextWithKeyNameSpecification(t *testing.T) {
 	spec := TextWithKeyNameSpecification{}
-	_, err := ParseSpecification(&spec)
+	_, err := Process(&spec)
 	if err != nil {
 		if !errors.Is(err, ErrSecretTypeDoesNotSupportTagKey) {
 			t.Errorf("Incorrect error. Want %v, got %v", ErrSecretTypeDoesNotSupportTagKey, err)
@@ -62,7 +62,7 @@ func TestParsingTextWithKeyNameSpecification(t *testing.T) {
 func TestParsingNonPointerSpecification(t *testing.T) {
 	spec := CorrectSpecification{}
 
-	_, err := ParseSpecification(spec)
+	_, err := Process(spec)
 	if err != nil {
 		if !errors.Is(err, ErrInvalidSpecification) {
 			t.Errorf("Incorrect error. Want %v, got %v", ErrInvalidSpecification, err)
@@ -76,65 +76,76 @@ var correctSpecificationFields = []field{
 		SecretName:    "Text",
 		SecretVersion: DefaultVersion,
 		MapKeyName:    "",
+		SplitWords:    false,
 	},
 	{
 		SecretType:    DefaultType,
 		SecretName:    "Text_Split_Words",
 		SecretVersion: DefaultVersion,
 		MapKeyName:    "",
+		SplitWords:    true,
 	},
 	{
 		SecretType:    DefaultType,
 		SecretName:    "a_secret",
 		SecretVersion: DefaultVersion,
 		MapKeyName:    "",
+		SplitWords:    false,
 	},
 	{
 		SecretType:    DefaultType,
 		SecretName:    "TextVersion",
 		SecretVersion: "latest",
 		MapKeyName:    "",
+		SplitWords:    false,
 	},
 	{
 		SecretType:    DefaultType,
 		SecretName:    "a_secret",
 		SecretVersion: "latest",
 		MapKeyName:    "",
+		SplitWords:    true,
 	},
 	{
 		SecretType:    "map",
 		SecretName:    "Map",
 		SecretVersion: DefaultVersion,
 		MapKeyName:    "Map",
+		SplitWords:    false,
 	},
 	{
 		SecretType:    "map",
 		SecretName:    "Map_Split_Words",
 		SecretVersion: DefaultVersion,
 		MapKeyName:    "Map_Split_Words",
+		SplitWords:    true,
 	},
 	{
 		SecretType:    "map",
 		SecretName:    "a_secret",
 		SecretVersion: DefaultVersion,
 		MapKeyName:    "MapSecretName",
+		SplitWords:    false,
 	},
 	{
 		SecretType:    "map",
 		SecretName:    "MapKeyName",
 		SecretVersion: DefaultVersion,
 		MapKeyName:    "a_key",
+		SplitWords:    false,
 	},
 	{
 		SecretType:    "map",
 		SecretName:    "MapVersion",
 		SecretVersion: "1",
 		MapKeyName:    "MapVersion",
+		SplitWords:    false,
 	},
 	{
 		SecretType:    "map",
 		SecretName:    "a_secret",
 		SecretVersion: "latest",
 		MapKeyName:    "a_key",
+		SplitWords:    true,
 	},
 }

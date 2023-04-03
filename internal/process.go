@@ -1,32 +1,68 @@
-package secretly
+package internal
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 	"reflect"
 	"regexp"
 	"strconv"
+
+	"gopkg.in/yaml.v3"
 )
+
+type secretConfig struct {
+	Version string `json:"version" yaml:"version"`
+}
 
 var RegexMatchCapitals = regexp.MustCompile("([a-z0-9])([A-Z])")
 
-func ParseSpecificationWithVersionsFromConfig(prefix string, spec interface{}) ([]field, error) {
-	_, err := ParseSpecification(spec)
+func ProcessWithVersionsFromConfig(filePath string, spec interface{}) ([]field, error) {
+	fields, err := Process(spec)
+	if err != nil {
+		return nil, err
+	}
+
+	b, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, err
+	}
+
+	secretConfigMap := make(map[string]secretConfig, len(fields))
+
+	switch ext := filepath.Ext(filePath); ext {
+	case ".json":
+		err = json.Unmarshal(b, &secretConfigMap)
+	case ".yaml", ".yml":
+		err = yaml.Unmarshal(b, &secretConfigMap)
+	default:
+		return nil, fmt.Errorf("file type \"%s\" not supported", ext)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	for i, f := range fields {
+		fmt.Println(f.Name())
+		if sc, ok := secretConfigMap[f.Name()]; ok {
+			fields[i].SecretVersion = sc.Version
+		}
+	}
+
+	return fields, nil
+}
+
+func ProcessWithVersionsFromEnv(prefix string, spec interface{}) ([]field, error) {
+	_, err := Process(spec)
 	if err != nil {
 		return nil, err
 	}
 	return nil, errors.New("not implemented")
 }
 
-func ParseSpecificationWithVersionsFromEnv(prefix string, spec interface{}) ([]field, error) {
-	_, err := ParseSpecification(spec)
-	if err != nil {
-		return nil, err
-	}
-	return nil, errors.New("not implemented")
-}
-
-func ParseSpecification(spec interface{}) ([]field, error) {
+func Process(spec interface{}, opts ...ProcessOption) ([]field, error) {
 	// ensure spec is a struct pointer
 	sValue := reflect.ValueOf(spec)
 	if sValue.Kind() != reflect.Ptr {
@@ -66,6 +102,15 @@ func ParseSpecification(spec interface{}) ([]field, error) {
 		}
 		fields = append(fields, field)
 	}
+
+	for _, opt := range opts {
+		var err error
+		fields, err = opt(fields)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return fields, nil
 }
 

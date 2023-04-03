@@ -2,7 +2,10 @@ module github.com/jack-mcveigh/secretly
 
 go 1.20
 
-require cloud.google.com/go/secretmanager v1.10.0
+require (
+	cloud.google.com/go/secretmanager v1.10.0
+	gopkg.in/yaml.v3 v3.0.1
+)
 
 require (
 	cloud.google.com/go/compute v1.12.1 // indirect

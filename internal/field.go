@@ -1,4 +1,4 @@
-package secretly
+package internal
 
 import "reflect"
 
@@ -18,6 +18,7 @@ type field struct {
 	SecretName    string
 	SecretVersion string
 	MapKeyName    string // NOTE: Only used when secretType is "map"
+	SplitWords    bool
 	Value         reflect.Value
 }
 
@@ -36,10 +37,14 @@ func NewField(fValue reflect.Value, fStructField reflect.StructField) (field, er
 		fValue = fValue.Elem()
 	}
 
-	var newField field
+	var (
+		newField field
+		ok       bool
+		err      error
+	)
 
 	// Get the split_words value, setting it to false if not explicitly set
-	splitWordsEnabled, ok, err := parseOptionalStructTagKey[bool](fStructField, TagSplitWords)
+	newField.SplitWords, ok, err = parseOptionalStructTagKey[bool](fStructField, TagSplitWords)
 	if err != nil {
 		return field{}, StructTagError{
 			name: fStructField.Name,
@@ -48,7 +53,7 @@ func NewField(fValue reflect.Value, fStructField reflect.StructField) (field, er
 		}
 	}
 	if !ok {
-		splitWordsEnabled = false
+		newField.SplitWords = false
 	}
 
 	// Get the type value, setting it to the default, "text", if not explicitly set.
@@ -86,7 +91,7 @@ func NewField(fValue reflect.Value, fStructField reflect.StructField) (field, er
 	}
 	if !ok {
 		newField.SecretName = fStructField.Name
-		if splitWordsEnabled {
+		if newField.SplitWords {
 			newField.SecretName = splitWords(newField.SecretName)
 		}
 	}
@@ -106,7 +111,7 @@ func NewField(fValue reflect.Value, fStructField reflect.StructField) (field, er
 		}
 		if !ok {
 			newField.MapKeyName = fStructField.Name
-			if splitWordsEnabled {
+			if newField.SplitWords {
 				newField.MapKeyName = splitWords(newField.MapKeyName)
 			}
 		}
@@ -135,6 +140,19 @@ func NewField(fValue reflect.Value, fStructField reflect.StructField) (field, er
 	}
 
 	return newField, nil
+}
+
+func (f *field) Name() string {
+	name := f.SecretName
+
+	if f.SecretType == "map" {
+		var delimiter string
+		if f.SplitWords {
+			delimiter = "_"
+		}
+		name += delimiter + f.MapKeyName
+	}
+	return name
 }
 
 func splitWords(s string) string {

@@ -1,4 +1,4 @@
-package secretly
+package internal
 
 import (
 	"errors"
