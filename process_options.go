@@ -2,10 +2,10 @@ package secretly
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/jack-mcveigh/secretly/internal"
 	"gopkg.in/yaml.v3"
@@ -48,7 +48,17 @@ func WithVersionsFromConfig(filePath string) internal.ProcessOption {
 }
 
 func WithVersionsFromEnv(prefix string) internal.ProcessOption {
-	return func(f []internal.Field) ([]internal.Field, error) {
-		return nil, errors.New("not implemented")
+	return func(fields []internal.Field) ([]internal.Field, error) {
+		for i, field := range fields {
+			if prefix != "" {
+				prefix += "_"
+			}
+
+			key := strings.ToUpper(prefix + field.Name())
+			if v, ok := os.LookupEnv(key); ok {
+				fields[i].SecretVersion = v // TODO: Support types other than string
+			}
+		}
+		return fields, nil
 	}
 }
