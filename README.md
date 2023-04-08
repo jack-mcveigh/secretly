@@ -21,11 +21,11 @@ type Specification struct {
     // A secret named "Split_Text_Secret" that stores text data.
     SplitTextSecret       string `type:"text" split_words:"true"`
     
-    // A secret named "Map_Secret" that stores mapped data including a key "Map_Secret_Key".
-    MapSecretKey          int `type:"map" secret_name:"Map_Secret" split_words:"true"`
+    // A secret named "Json_Secret" that stores mapped data including a key "Map_Secret_Key".
+    JsonSecretKey          int `type:"json" secret_name:"Json_Secret" split_words:"true"`
 
-    // A secret named "Map_Secret" that stores mapped data with a key "Map_Secret_Key_2".
-    MapSecretExplicitKey  float64 `type:"map" secret_name:"Map_Secret" key_name:"Map_Secret_Key_2"`
+    // A secret named "Json_Secret" that stores mapped data with a key "Json_Secret_Key_2".
+    JsonSecretExplicitKey  float64 `type:"json" secret_name:"Json_Secret" key_name:"Json_Secret_Key_2"`
 
     // Ignored.
     IgnoredField          string `ignored:"true"`

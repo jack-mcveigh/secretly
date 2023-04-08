@@ -14,13 +14,21 @@ type CorrectSpecification struct {
 	// NOTE: split_words doesn't do anything when secret_name is provided
 	TextAll string `secret_name:"a_secret" version:"latest" split_words:"true"`
 
-	Map           string `type:"map"`
-	MapSplitWords string `type:"map" split_words:"true"`
-	MapSecretName string `type:"map" secret_name:"a_secret"`
-	MapKeyName    string `type:"map" key_name:"a_key"`
-	MapVersion    string `type:"map" version:"1"`
+	Json           string `type:"json"`
+	JsonSplitWords string `type:"json" split_words:"true"`
+	JsonSecretName string `type:"json" secret_name:"a_secret"`
+	JsonKeyName    string `type:"json" key_name:"a_key"`
+	JsonVersion    string `type:"json" version:"1"`
 	// NOTE: split_words doesn't do anything when secret_name and key_name is provided
-	MapAll string `type:"map" secret_name:"a_secret" key_name:"a_key" version:"latest" split_words:"true"`
+	JsonAll string `type:"json" secret_name:"a_secret" key_name:"a_key" version:"latest" split_words:"true"`
+
+	Yaml           string `type:"yaml"`
+	YamlSplitWords string `type:"yaml" split_words:"true"`
+	YamlSecretName string `type:"yaml" secret_name:"a_secret"`
+	YamlKeyName    string `type:"yaml" key_name:"a_key"`
+	YamlVersion    string `type:"yaml" version:"1"`
+	// NOTE: split_words doesn't do anything when secret_name and key_name is provided
+	YamlAll string `type:"yaml" secret_name:"a_secret" key_name:"a_key" version:"latest" split_words:"true"`
 
 	Ignored string `ignored:"true"`
 	ignored string
@@ -71,6 +79,7 @@ func TestParsingNonPointerSpecification(t *testing.T) {
 }
 
 var correctSpecificationFields = []Field{
+	// text
 	{
 		SecretType:    DefaultType,
 		SecretName:    "Text",
@@ -106,43 +115,87 @@ var correctSpecificationFields = []Field{
 		MapKeyName:    "",
 		SplitWords:    true,
 	},
+	// json
 	{
-		SecretType:    "map",
-		SecretName:    "Map",
+		SecretType:    "json",
+		SecretName:    "Json",
 		SecretVersion: DefaultVersion,
-		MapKeyName:    "Map",
+		MapKeyName:    "Json",
 		SplitWords:    false,
 	},
 	{
-		SecretType:    "map",
-		SecretName:    "Map_Split_Words",
+		SecretType:    "json",
+		SecretName:    "Json_Split_Words",
 		SecretVersion: DefaultVersion,
-		MapKeyName:    "Map_Split_Words",
+		MapKeyName:    "Json_Split_Words",
 		SplitWords:    true,
 	},
 	{
-		SecretType:    "map",
+		SecretType:    "json",
 		SecretName:    "a_secret",
 		SecretVersion: DefaultVersion,
-		MapKeyName:    "MapSecretName",
+		MapKeyName:    "JsonSecretName",
 		SplitWords:    false,
 	},
 	{
-		SecretType:    "map",
-		SecretName:    "MapKeyName",
+		SecretType:    "json",
+		SecretName:    "JsonKeyName",
 		SecretVersion: DefaultVersion,
 		MapKeyName:    "a_key",
 		SplitWords:    false,
 	},
 	{
-		SecretType:    "map",
-		SecretName:    "MapVersion",
+		SecretType:    "json",
+		SecretName:    "JsonVersion",
 		SecretVersion: "1",
-		MapKeyName:    "MapVersion",
+		MapKeyName:    "JsonVersion",
 		SplitWords:    false,
 	},
 	{
-		SecretType:    "map",
+		SecretType:    "json",
+		SecretName:    "a_secret",
+		SecretVersion: "latest",
+		MapKeyName:    "a_key",
+		SplitWords:    true,
+	},
+	// yaml
+	{
+		SecretType:    "yaml",
+		SecretName:    "Yaml",
+		SecretVersion: DefaultVersion,
+		MapKeyName:    "Yaml",
+		SplitWords:    false,
+	},
+	{
+		SecretType:    "yaml",
+		SecretName:    "Yaml_Split_Words",
+		SecretVersion: DefaultVersion,
+		MapKeyName:    "Yaml_Split_Words",
+		SplitWords:    true,
+	},
+	{
+		SecretType:    "yaml",
+		SecretName:    "a_secret",
+		SecretVersion: DefaultVersion,
+		MapKeyName:    "YamlSecretName",
+		SplitWords:    false,
+	},
+	{
+		SecretType:    "yaml",
+		SecretName:    "YamlKeyName",
+		SecretVersion: DefaultVersion,
+		MapKeyName:    "a_key",
+		SplitWords:    false,
+	},
+	{
+		SecretType:    "yaml",
+		SecretName:    "YamlVersion",
+		SecretVersion: "1",
+		MapKeyName:    "YamlVersion",
+		SplitWords:    false,
+	},
+	{
+		SecretType:    "yaml",
 		SecretName:    "a_secret",
 		SecretVersion: "latest",
 		MapKeyName:    "a_key",

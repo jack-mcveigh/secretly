@@ -14,8 +14,8 @@ const (
 
 type SecretConfig struct {
 	ServiceIntegrationToken string `split_words:"true"`
-	DatabaseUsername        string `type:"map" secret_name:"My-Database-Credentials" key_name:"Username" split_words:"true"`
-	DatabasePassword        string `type:"map" secret_name:"My-Database-Credentials" key_name:"Password" split_words:"true"`
+	DatabaseUsername        string `type:"json" secret_name:"My-Database-Credentials" key_name:"Username" split_words:"true"`
+	DatabasePassword        string `type:"json" secret_name:"My-Database-Credentials" key_name:"Password" split_words:"true"`
 }
 
 func main() {

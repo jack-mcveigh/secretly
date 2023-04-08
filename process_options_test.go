@@ -32,8 +32,15 @@ func TestSetVersionsFromConfig(t *testing.T) {
 					SplitWords:    true,
 				},
 				{
-					SecretType:    "map",
-					SecretName:    "Map_Secret",
+					SecretType:    "json",
+					SecretName:    "Json_Secret",
+					SecretVersion: "latest",
+					MapKeyName:    "Key",
+					SplitWords:    true,
+				},
+				{
+					SecretType:    "yaml",
+					SecretName:    "Yaml_Secret",
 					SecretVersion: "latest",
 					MapKeyName:    "Key",
 					SplitWords:    true,
@@ -61,8 +68,15 @@ func TestSetVersionsFromConfig(t *testing.T) {
 					SplitWords:    true,
 				},
 				{
-					SecretType:    "map",
-					SecretName:    "Map_Secret",
+					SecretType:    "json",
+					SecretName:    "Json_Secret",
+					SecretVersion: "latest",
+					MapKeyName:    "Key",
+					SplitWords:    true,
+				},
+				{
+					SecretType:    "yaml",
+					SecretName:    "Yaml_Secret",
 					SecretVersion: "latest",
 					MapKeyName:    "Key",
 					SplitWords:    true,
@@ -120,8 +134,9 @@ func TestWithVersionsFromEnv(t *testing.T) {
 			name:   "All Env Vars Exist",
 			prefix: "TEST",
 			envVarMap: map[string]string{
-				"TEST_TEXT_SECRET":    "1",
-				"TEST_MAP_SECRET_KEY": "latest",
+				"TEST_TEXT_SECRET":     "1",
+				"TEST_JSON_SECRET_KEY": "latest",
+				"TEST_YAML_SECRET_KEY": "latest",
 			},
 			want: []internal.Field{
 				{
@@ -132,8 +147,15 @@ func TestWithVersionsFromEnv(t *testing.T) {
 					SplitWords:    true,
 				},
 				{
-					SecretType:    "map",
-					SecretName:    "Map_Secret",
+					SecretType:    "json",
+					SecretName:    "Json_Secret",
+					SecretVersion: "latest",
+					MapKeyName:    "Key",
+					SplitWords:    true,
+				},
+				{
+					SecretType:    "yaml",
+					SecretName:    "Yaml_Secret",
 					SecretVersion: "latest",
 					MapKeyName:    "Key",
 					SplitWords:    true,
@@ -145,7 +167,8 @@ func TestWithVersionsFromEnv(t *testing.T) {
 			name:   "One Env Var Missing",
 			prefix: "TEST",
 			envVarMap: map[string]string{
-				"TEST_MAP_SECRET_KEY": "latest",
+				"TEST_JSON_SECRET_KEY": "latest",
+				"TEST_YAML_SECRET_KEY": "latest",
 			},
 			want: []internal.Field{
 				{
@@ -156,8 +179,15 @@ func TestWithVersionsFromEnv(t *testing.T) {
 					SplitWords:    true,
 				},
 				{
-					SecretType:    "map",
-					SecretName:    "Map_Secret",
+					SecretType:    "json",
+					SecretName:    "Json_Secret",
+					SecretVersion: "latest",
+					MapKeyName:    "Key",
+					SplitWords:    true,
+				},
+				{
+					SecretType:    "yaml",
+					SecretName:    "Yaml_Secret",
 					SecretVersion: "latest",
 					MapKeyName:    "Key",
 					SplitWords:    true,
@@ -178,8 +208,15 @@ func TestWithVersionsFromEnv(t *testing.T) {
 					SplitWords:    true,
 				},
 				{
-					SecretType:    "map",
-					SecretName:    "Map_Secret",
+					SecretType:    "json",
+					SecretName:    "Json_Secret",
+					SecretVersion: "0",
+					MapKeyName:    "Key",
+					SplitWords:    true,
+				},
+				{
+					SecretType:    "yaml",
+					SecretName:    "Yaml_Secret",
 					SecretVersion: "0",
 					MapKeyName:    "Key",
 					SplitWords:    true,
@@ -230,7 +267,8 @@ func TestWithVersionsFromEnv(t *testing.T) {
 
 type TestingSpecification struct {
 	TextSecret string `split_words:"true"`
-	MapSecret  string `type:"map" key_name:"Key" split_words:"true"`
+	JsonSecret string `type:"json" key_name:"Key" split_words:"true"`
+	YamlSecret string `type:"yaml" key_name:"Key" split_words:"true"`
 }
 
 var (
@@ -239,7 +277,10 @@ var (
 	"Text_Secret": {
 		"version": "1"
 	},
-	"Map_Secret_Key": {
+	"Json_Secret_Key": {
+		"version": "latest"
+	},
+	"Yaml_Secret_Key": {
 		"version": "latest"
 	}
 }`)
@@ -250,7 +291,10 @@ var (
 	"Text_Secret": {
 		"version": "1"
 	},
-	"Map_Secret_Key": {
+	"Json_Secret_Key": {
+		"version": "latest"
+	},
+	"Yaml_Secret_Key": {
 		"version": "latest"
 	}
 }`)
@@ -258,7 +302,9 @@ var (
 	validYamlBytes = []byte(`
 Text_Secret:
     version: 1
-Map_Secret_Key:
+Json_Secret_Key:
+    version: latest
+Yaml_Secret_Key:
     version: latest
 `)
 
@@ -266,7 +312,9 @@ Map_Secret_Key:
 NOT VALID YAML
 Text_Secret:
     version: 1
-Map_Secret_Key:
+Json_Secret_Key:
+    version: latest
+Yaml_Secret_Key:
     version: latest
 `)
 )
@@ -281,8 +329,15 @@ func newDefaultSpecificationFields() []internal.Field {
 			SplitWords:    true,
 		},
 		{
-			SecretType:    "map",
-			SecretName:    "Map_Secret",
+			SecretType:    "json",
+			SecretName:    "Json_Secret",
+			SecretVersion: "latest",
+			MapKeyName:    "Key",
+			SplitWords:    true,
+		},
+		{
+			SecretType:    "yaml",
+			SecretName:    "Yaml_Secret",
 			SecretVersion: "latest",
 			MapKeyName:    "Key",
 			SplitWords:    true,

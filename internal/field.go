@@ -26,7 +26,7 @@ type Field struct {
 	SecretType    string
 	SecretName    string
 	SecretVersion string
-	MapKeyName    string // NOTE: Only used when secretType is "map"
+	MapKeyName    string // NOTE: Only used when secretType is "json" or "yaml"
 	SplitWords    bool
 	Value         reflect.Value
 }
@@ -79,7 +79,7 @@ func NewField(fValue reflect.Value, fStructField reflect.StructField) (Field, er
 		newField.SecretType = DefaultType
 	}
 	switch newField.SecretType {
-	case "text", "map":
+	case "text", "json", "yaml":
 	default:
 		return Field{}, StructTagError{
 			Name: fStructField.Name,
@@ -105,11 +105,11 @@ func NewField(fValue reflect.Value, fStructField reflect.StructField) (Field, er
 		}
 	}
 
-	// Get the key_name value, if the type is "map", and setting it to the field's name
+	// Get the key_name value, if the type is "json" or "yaml", and setting it to the field's name
 	// if not explicitly set. Split the words if the default value was used and
 	// split_words was set to true
 	switch newField.SecretType {
-	case "map":
+	case "json", "yaml":
 		newField.MapKeyName, ok, err = parseOptionalStructTagKey[string](fStructField, TagKeyName)
 		if err != nil {
 			return Field{}, StructTagError{
@@ -154,7 +154,8 @@ func NewField(fValue reflect.Value, fStructField reflect.StructField) (Field, er
 func (f *Field) Name() string {
 	name := f.SecretName
 
-	if f.SecretType == "map" {
+	switch f.SecretType {
+	case "json", "yaml":
 		var delimiter string
 		if f.SplitWords {
 			delimiter = "_"
@@ -168,8 +169,10 @@ func (f *Field) Set(b []byte) error {
 	switch f.SecretType {
 	case "text":
 		return f.setText(b)
-	case "map":
-		return f.setMap(b)
+	case "json":
+		return f.setJSON(b)
+	case "yaml":
+		return f.setYAML(b)
 	default:
 		return ErrInvalidSecretType
 	}
@@ -232,31 +235,34 @@ func (f *Field) setText(b []byte) error {
 	return nil
 }
 
-func (f *Field) setMap(b []byte) error {
-	var (
-		secretMap map[string]string
-		err       error
-	)
+func (f *Field) setJSON(b []byte) error {
+	var secretMap map[string]string
 
-	err = json.Unmarshal(b, &secretMap)
-	if err == nil {
-		goto readSecretMap
+	err := json.Unmarshal(b, &secretMap)
+	if err != nil {
+		return errors.New("secret is not valid json")
 	}
 
-	err = yaml.Unmarshal(b, &secretMap)
-	if err == nil {
-		goto readSecretMap
-	}
-
-	// Note: setting err here so that the defer can see the secret was not a valid map.
-	return errors.New("secret is not a valid map")
-
-readSecretMap:
 	if value, ok := secretMap[f.MapKeyName]; ok {
 		return f.setText([]byte(value))
 	}
 
-	return fmt.Errorf("the secret map, \"%s\" does not contain key \"%s\"", f.SecretName, f.MapKeyName)
+	return fmt.Errorf("the json secret, \"%s\" does not contain key \"%s\"", f.SecretName, f.MapKeyName)
+}
+
+func (f *Field) setYAML(b []byte) error {
+	var secretMap map[string]string
+
+	err := yaml.Unmarshal(b, &secretMap)
+	if err != nil {
+		return errors.New("secret is not valid yaml")
+	}
+
+	if value, ok := secretMap[f.MapKeyName]; ok {
+		return f.setText([]byte(value))
+	}
+
+	return fmt.Errorf("the yaml secret, \"%s\" does not contain key \"%s\"", f.SecretName, f.MapKeyName)
 }
 
 func splitWords(s string) string {
