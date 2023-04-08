@@ -11,7 +11,7 @@ type ProcessOption func([]Field) error
 
 var RegexMatchCapitals = regexp.MustCompile("([a-z0-9])([A-Z])")
 
-func Process(spec interface{}, opts ...ProcessOption) ([]Field, error) {
+func Process(spec any, opts ...ProcessOption) ([]Field, error) {
 	// ensure spec is a struct pointer
 	sValue := reflect.ValueOf(spec)
 	if sValue.Kind() != reflect.Ptr {
@@ -32,9 +32,9 @@ func Process(spec interface{}, opts ...ProcessOption) ([]Field, error) {
 		ignored, ok, err := parseOptionalStructTagKey[bool](fStructField, TagIgnored)
 		if err != nil {
 			return nil, StructTagError{
-				name: fStructField.Name,
-				key:  TagIgnored,
-				err:  err,
+				Name: fStructField.Name,
+				Key:  TagIgnored,
+				Err:  err,
 			}
 		}
 		if !ok {

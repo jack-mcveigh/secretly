@@ -12,29 +12,12 @@ import (
 )
 
 type (
+	unmarshalFunc func([]byte, any) error
+
 	secretConfig struct {
 		Version string `json:"version" yaml:"version"`
 	}
-
-	unmarshalFunc = func([]byte, any) error
 )
-
-func setVersionsFromConfig(unmarshal unmarshalFunc, b []byte, fields []internal.Field) error {
-	secretConfigMap := make(map[string]secretConfig, len(fields))
-
-	err := unmarshal(b, &secretConfigMap)
-	if err != nil {
-		return err
-	}
-
-	for i, f := range fields {
-		if sc, ok := secretConfigMap[f.Name()]; ok {
-			fields[i].SecretVersion = sc.Version
-		}
-	}
-
-	return nil
-}
 
 func WithVersionsFromConfig(filePath string) internal.ProcessOption {
 	return func(fields []internal.Field) error {
@@ -53,6 +36,23 @@ func WithVersionsFromConfig(filePath string) internal.ProcessOption {
 		}
 		return err
 	}
+}
+
+func setVersionsFromConfig(unmarshal unmarshalFunc, b []byte, fields []internal.Field) error {
+	secretConfigMap := make(map[string]secretConfig, len(fields))
+
+	err := unmarshal(b, &secretConfigMap)
+	if err != nil {
+		return err
+	}
+
+	for i, f := range fields {
+		if sc, ok := secretConfigMap[f.Name()]; ok {
+			fields[i].SecretVersion = sc.Version
+		}
+	}
+
+	return nil
 }
 
 func WithVersionsFromEnv(prefix string) internal.ProcessOption {
