@@ -7,7 +7,7 @@ import (
 	"strconv"
 )
 
-type ProcessOption func([]Field) ([]Field, error)
+type ProcessOption func([]Field) error
 
 var RegexMatchCapitals = regexp.MustCompile("([a-z0-9])([A-Z])")
 
@@ -53,8 +53,7 @@ func Process(spec interface{}, opts ...ProcessOption) ([]Field, error) {
 	}
 
 	for _, opt := range opts {
-		var err error
-		fields, err = opt(fields)
+		err := opt(fields)
 		if err != nil {
 			return nil, err
 		}

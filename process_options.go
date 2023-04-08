@@ -11,44 +11,52 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type secretConfig struct {
-	Version string `json:"version" yaml:"version"`
+type (
+	secretConfig struct {
+		Version string `json:"version" yaml:"version"`
+	}
+
+	unmarshalFunc = func([]byte, any) error
+)
+
+func setVersionsFromConfig(unmarshal unmarshalFunc, b []byte, fields []internal.Field) error {
+	secretConfigMap := make(map[string]secretConfig, len(fields))
+
+	err := unmarshal(b, &secretConfigMap)
+	if err != nil {
+		return err
+	}
+
+	for i, f := range fields {
+		if sc, ok := secretConfigMap[f.Name()]; ok {
+			fields[i].SecretVersion = sc.Version
+		}
+	}
+
+	return nil
 }
 
 func WithVersionsFromConfig(filePath string) internal.ProcessOption {
-	return func(fields []internal.Field) ([]internal.Field, error) {
+	return func(fields []internal.Field) error {
 		b, err := os.ReadFile(filePath)
 		if err != nil {
-			return nil, err
+			return err
 		}
-
-		secretConfigMap := make(map[string]secretConfig, len(fields))
 
 		switch ext := filepath.Ext(filePath); ext {
 		case ".json":
-			err = json.Unmarshal(b, &secretConfigMap)
+			err = setVersionsFromConfig(json.Unmarshal, b, fields)
 		case ".yaml", ".yml":
-			err = yaml.Unmarshal(b, &secretConfigMap)
+			err = setVersionsFromConfig(yaml.Unmarshal, b, fields)
 		default:
-			return nil, fmt.Errorf("file type \"%s\" not supported", ext)
+			err = fmt.Errorf("file type \"%s\" not supported", ext)
 		}
-		if err != nil {
-			return nil, err
-		}
-
-		for i, f := range fields {
-			fmt.Println(f.Name())
-			if sc, ok := secretConfigMap[f.Name()]; ok {
-				fields[i].SecretVersion = sc.Version
-			}
-		}
-
-		return fields, nil
+		return err
 	}
 }
 
 func WithVersionsFromEnv(prefix string) internal.ProcessOption {
-	return func(fields []internal.Field) ([]internal.Field, error) {
+	return func(fields []internal.Field) error {
 		for i, field := range fields {
 			if prefix != "" {
 				prefix += "_"
@@ -59,6 +67,6 @@ func WithVersionsFromEnv(prefix string) internal.ProcessOption {
 				fields[i].SecretVersion = v // TODO: Support types other than string
 			}
 		}
-		return fields, nil
+		return nil
 	}
 }
