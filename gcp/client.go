@@ -7,23 +7,31 @@ import (
 
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
 	"cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
+	"github.com/googleapis/gax-go/v2"
 	"github.com/jack-mcveigh/secretly/internal"
 )
 
-type Client struct {
-	client    *secretmanager.Client
+const secretVersionsFormat = "projects/%s/secrets/%s/versions/%s"
+
+type Client interface {
+	AccessSecretVersion(ctx context.Context, req *secretmanagerpb.AccessSecretVersionRequest, opts ...gax.CallOption) (*secretmanagerpb.AccessSecretVersionResponse, error)
+	Close() error
+}
+
+type client struct {
+	client    Client
 	projectID string
 
 	secretCache map[string]map[string][]byte
 }
 
-func NewClient(projectID string) (*Client, error) {
+func NewClient(projectID string) (*client, error) {
 	smc, err := secretmanager.NewClient(context.TODO())
 	if err != nil {
 		return nil, err
 	}
 
-	c := &Client{
+	c := &client{
 		client:      smc,
 		projectID:   projectID,
 		secretCache: make(map[string]map[string][]byte),
@@ -31,7 +39,7 @@ func NewClient(projectID string) (*Client, error) {
 	return c, nil
 }
 
-func (c *Client) Process(spec any, opts ...internal.ProcessOption) error {
+func (c *client) Process(spec any, opts ...internal.ProcessOption) error {
 	fields, err := internal.Process(spec)
 	if err != nil {
 		return err
@@ -51,18 +59,22 @@ func (c *Client) Process(spec any, opts ...internal.ProcessOption) error {
 	return nil
 }
 
-func (c *Client) GetSecret(ctx context.Context, name string) ([]byte, error) {
-	return c.getSecretVersion(ctx, name, "latest")
+func (c *client) GetSecret(ctx context.Context, name string) ([]byte, error) {
+	b, err := c.getSecretVersion(ctx, name, "latest")
+	c.addSecretToCache(name, "latest", b)
+	return b, err
 }
 
-func (c *Client) GetSecretVersion(ctx context.Context, name, version string) ([]byte, error) {
-	_, err := strconv.ParseUint(version, 10, 0)
-	if err != nil {
-		return nil, internal.ErrInvalidSecretVersion
-	}
-
-	if version == "0" {
+func (c *client) GetSecretVersion(ctx context.Context, name, version string) ([]byte, error) {
+	switch version {
+	case "0":
 		version = "latest"
+	case "latest":
+	default:
+		_, err := strconv.ParseUint(version, 10, 0)
+		if err != nil {
+			return nil, internal.ErrInvalidSecretVersion
+		}
 	}
 
 	if b, hit := c.getSecretFromCache(name, version); hit {
@@ -79,7 +91,7 @@ func (c *Client) GetSecretVersion(ctx context.Context, name, version string) ([]
 	return b, nil
 }
 
-func (c *Client) addSecretToCache(name, version string, b []byte) {
+func (c *client) addSecretToCache(name, version string, b []byte) {
 	if c.secretCache[name] == nil {
 		c.secretCache[name] = make(map[string][]byte)
 	}
@@ -87,7 +99,7 @@ func (c *Client) addSecretToCache(name, version string, b []byte) {
 	c.secretCache[name][version] = b
 }
 
-func (c *Client) getSecretFromCache(name, version string) ([]byte, bool) {
+func (c *client) getSecretFromCache(name, version string) ([]byte, bool) {
 	if c.secretCache[name] == nil {
 		return nil, false
 	}
@@ -97,10 +109,9 @@ func (c *Client) getSecretFromCache(name, version string) ([]byte, bool) {
 	return nil, false
 }
 
-func (c *Client) getSecretVersion(ctx context.Context, name, version string) ([]byte, error) {
-	format := "projects/%s/secrets/%s/versions/%s"
+func (c *client) getSecretVersion(ctx context.Context, name, version string) ([]byte, error) {
 	req := &secretmanagerpb.AccessSecretVersionRequest{
-		Name: fmt.Sprintf(format, c.projectID, name, version),
+		Name: fmt.Sprintf(secretVersionsFormat, c.projectID, name, version),
 	}
 
 	resp, err := c.client.AccessSecretVersion(ctx, req)
@@ -110,6 +121,6 @@ func (c *Client) getSecretVersion(ctx context.Context, name, version string) ([]
 	return resp.GetPayload().GetData(), nil
 }
 
-func (c *Client) Close() error {
+func (c *client) Close() error {
 	return c.client.Close()
 }
