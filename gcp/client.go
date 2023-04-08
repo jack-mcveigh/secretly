@@ -13,6 +13,8 @@ import (
 type Client struct {
 	client    *secretmanager.Client
 	projectID string
+
+	secretCache map[string]map[string][]byte
 }
 
 func NewClient(projectID string) (*Client, error) {
@@ -22,8 +24,9 @@ func NewClient(projectID string) (*Client, error) {
 	}
 
 	c := &Client{
-		client:    smc,
-		projectID: projectID,
+		client:      smc,
+		projectID:   projectID,
+		secretCache: make(map[string]map[string][]byte),
 	}
 	return c, nil
 }
@@ -61,7 +64,37 @@ func (c *Client) GetSecretVersion(ctx context.Context, name, version string) ([]
 	if version == "0" {
 		version = "latest"
 	}
-	return c.getSecretVersion(ctx, name, version)
+
+	if b, hit := c.getSecretFromCache(name, version); hit {
+		return b, nil
+	}
+
+	b, err := c.getSecretVersion(ctx, name, version)
+	if err != nil {
+		return nil, err
+	}
+
+	c.addSecretToCache(name, version, b)
+
+	return b, nil
+}
+
+func (c *Client) addSecretToCache(name, version string, b []byte) {
+	if c.secretCache[name] == nil {
+		c.secretCache[name] = make(map[string][]byte)
+	}
+
+	c.secretCache[name][version] = b
+}
+
+func (c *Client) getSecretFromCache(name, version string) ([]byte, bool) {
+	if c.secretCache[name] == nil {
+		return nil, false
+	}
+	if b, ok := c.secretCache[name][version]; ok {
+		return b, true
+	}
+	return nil, false
 }
 
 func (c *Client) getSecretVersion(ctx context.Context, name, version string) ([]byte, error) {
