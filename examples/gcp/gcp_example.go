@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/jack-mcveigh/secretly"
-	"github.com/jack-mcveigh/secretly/gcp"
+	secretlygcp "github.com/jack-mcveigh/secretly/gcp"
 )
 
 const (
@@ -13,13 +13,33 @@ const (
 )
 
 type SecretConfig struct {
+	// The secret stores text data and is named "Service_Integration_Token"
+	// in GCP Secret Manager. Since "split_words" is enabled, version info can be loaded
+	// from a config file by including the field name, converted to PascalCase to
+	// Snake_Case, as a key: "Service_Integration_Token".
 	ServiceIntegrationToken string `split_words:"true"`
-	DatabaseUsername        string `type:"json" secret_name:"My-Database-Credentials" key_name:"Username" split_words:"true"`
-	DatabasePassword        string `type:"json" secret_name:"My-Database-Credentials" key_name:"Password" split_words:"true"`
+
+	// The secret stores a json map and is named "My-Database-Credentials"
+	// in GCP Secret Manager. The field to extract from the json secret is named
+	// "Username". Version info from a config can be loaded by the config including the
+	// key "My-Database-Credentials_Username". Version info from a config can be loaded
+	// by exporting the variable "My_Database_Credentials_Username". Note, an underscore
+	// separates the secret_name, "My_Database_Credentials", and the key_name,
+	// "Username", since split_words is set to true.
+	DatabaseUsername string `type:"json" secret_name:"My-Database-Credentials" key_name:"Username" split_words:"true"`
+
+	// The secret stores a json map and is named "My-Database-Credentials"
+	// in GCP Secret Manager. The field to extract from the json secret is named
+	// "Password". Version info from a config can be loaded by the config including the
+	// key "My-Database-Credentials_Password". Version info from a config can be loaded
+	// by exporting the variable "My_Database_Credentials_Password". Note, an underscore
+	// separates the secret_name, "My_Database_Credentials", and the key_name,
+	// "Password", since split_words is set to true.
+	DatabasePassword string `type:"json" secret_name:"My-Database-Credentials" key_name:"Password" split_words:"true"`
 }
 
 func main() {
-	client, err := gcp.NewClient(gcpProjectId)
+	client, err := secretlygcp.NewClient(gcpProjectId)
 	if err != nil {
 		log.Fatalf("Failed to initialize gcp secret manager client: %v", err)
 	}

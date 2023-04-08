@@ -62,7 +62,8 @@ func WithVersionsFromEnv(prefix string) internal.ProcessOption {
 		}
 
 		for i, field := range fields {
-			key := strings.ToUpper(prefix + field.Name())
+			name := strings.ReplaceAll(field.Name(), "-", "_")
+			key := strings.ToUpper(prefix + name)
 			if v, ok := os.LookupEnv(key); ok {
 				fields[i].SecretVersion = v // TODO: Support types other than string
 			}
