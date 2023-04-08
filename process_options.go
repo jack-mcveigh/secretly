@@ -57,11 +57,11 @@ func setVersionsFromConfig(unmarshal unmarshalFunc, b []byte, fields []internal.
 
 func WithVersionsFromEnv(prefix string) internal.ProcessOption {
 	return func(fields []internal.Field) error {
-		for i, field := range fields {
-			if prefix != "" {
-				prefix += "_"
-			}
+		if prefix != "" {
+			prefix += "_"
+		}
 
+		for i, field := range fields {
 			key := strings.ToUpper(prefix + field.Name())
 			if v, ok := os.LookupEnv(key); ok {
 				fields[i].SecretVersion = v // TODO: Support types other than string
