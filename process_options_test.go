@@ -202,7 +202,7 @@ func TestWithVersionsFromEnv(t *testing.T) {
 			spec := TestingSpecification{}
 			fields, err := internal.Process(&spec, WithVersionsFromEnv(tt.prefix))
 
-			if err != nil {
+			if err != tt.wantErr {
 				if !errors.Is(err, tt.wantErr) {
 					t.Errorf("Incorrect error. Want %v, got %v", tt.wantErr, err)
 				}
