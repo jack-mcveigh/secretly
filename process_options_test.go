@@ -11,6 +11,38 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+type TestingSpecification struct {
+	TextSecret string `split_words:"true"`
+	JsonSecret string `type:"json" key_name:"Key" split_words:"true"`
+	YamlSecret string `type:"yaml" key_name:"Key" split_words:"true"`
+}
+
+func newTestingSpecificationFields() []internal.Field {
+	return []internal.Field{
+		{
+			SecretType:    internal.DefaultType,
+			SecretName:    "Text_Secret",
+			SecretVersion: "latest",
+			MapKeyName:    "",
+			SplitWords:    true,
+		},
+		{
+			SecretType:    "json",
+			SecretName:    "Json_Secret",
+			SecretVersion: "latest",
+			MapKeyName:    "Key",
+			SplitWords:    true,
+		},
+		{
+			SecretType:    "yaml",
+			SecretName:    "Yaml_Secret",
+			SecretVersion: "latest",
+			MapKeyName:    "Key",
+			SplitWords:    true,
+		},
+	}
+}
+
 func TestSetVersionsFromConfig(t *testing.T) {
 	tests := []struct {
 		name          string
@@ -52,7 +84,7 @@ func TestSetVersionsFromConfig(t *testing.T) {
 			name:          "Invalid JSON",
 			unmarshalFunc: json.Unmarshal,
 			content:       invalidJsonBytes,
-			want:          newDefaultSpecificationFields(),
+			want:          newTestingSpecificationFields(),
 			wantErr:       true,
 		},
 		{
@@ -88,14 +120,14 @@ func TestSetVersionsFromConfig(t *testing.T) {
 			name:          "Invalid YAML",
 			unmarshalFunc: yaml.Unmarshal,
 			content:       invalidYamlBytes,
-			want:          newDefaultSpecificationFields(),
+			want:          newTestingSpecificationFields(),
 			wantErr:       true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fields := newDefaultSpecificationFields()
+			fields := newTestingSpecificationFields()
 			err := setVersionsFromConfig(tt.unmarshalFunc, tt.content, fields)
 
 			// If the test is set up with an invalid input, we don't care what the error is,
@@ -265,15 +297,8 @@ func TestWithVersionsFromEnv(t *testing.T) {
 	}
 }
 
-type TestingSpecification struct {
-	TextSecret string `split_words:"true"`
-	JsonSecret string `type:"json" key_name:"Key" split_words:"true"`
-	YamlSecret string `type:"yaml" key_name:"Key" split_words:"true"`
-}
-
 var (
-	validJsonBytes = []byte(`
-{
+	validJsonBytes = []byte(`{
 	"Text_Secret": {
 		"version": "1"
 	},
@@ -285,8 +310,7 @@ var (
 	}
 }`)
 
-	invalidJsonBytes = []byte(`
-{
+	invalidJsonBytes = []byte(`{
 	NOT VALID JSON
 	"Text_Secret": {
 		"version": "1"
@@ -299,8 +323,7 @@ var (
 	}
 }`)
 
-	validYamlBytes = []byte(`
-Text_Secret:
+	validYamlBytes = []byte(`Text_Secret:
     version: 1
 Json_Secret_Key:
     version: latest
@@ -308,8 +331,7 @@ Yaml_Secret_Key:
     version: latest
 `)
 
-	invalidYamlBytes = []byte(`
-NOT VALID YAML
+	invalidYamlBytes = []byte(`NOT VALID YAML
 Text_Secret:
     version: 1
 Json_Secret_Key:
@@ -318,29 +340,3 @@ Yaml_Secret_Key:
     version: latest
 `)
 )
-
-func newDefaultSpecificationFields() []internal.Field {
-	return []internal.Field{
-		{
-			SecretType:    internal.DefaultType,
-			SecretName:    "Text_Secret",
-			SecretVersion: "latest",
-			MapKeyName:    "",
-			SplitWords:    true,
-		},
-		{
-			SecretType:    "json",
-			SecretName:    "Json_Secret",
-			SecretVersion: "latest",
-			MapKeyName:    "Key",
-			SplitWords:    true,
-		},
-		{
-			SecretType:    "yaml",
-			SecretName:    "Yaml_Secret",
-			SecretVersion: "latest",
-			MapKeyName:    "Key",
-			SplitWords:    true,
-		},
-	}
-}
