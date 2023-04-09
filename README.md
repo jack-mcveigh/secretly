@@ -1,5 +1,9 @@
 # Secretly
 
+[![Tests workflow](https://img.shields.io/github/workflow/status/jack-mcveigh/secretly/Test%20Base?longCache=tru&label=tests&logo=github&logoColor=fff)](https://github.com/jack-mcveigh/secretly/actions?query=workflow%3ATest%20Base)
+[![Go Report Card](https://goreportcard.com/badge/github.com/jack-mcveigh/secretly)](https://goreportcard.com/report/github.com/jack-mcveigh/secretly)
+[![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 ___Secretly___ was created to allow Go applications to easily interface with popular secret management services and reduce secret ingestion boiler-plate. In-memory secret caching is included to reduce the number of operations against the secret management service, when dealing with secrets that store map data in the form of JSON and YAML.
 
 Below is a list of the currently supported secret management services:
