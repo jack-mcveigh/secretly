@@ -9,6 +9,7 @@ import (
 
 	"cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
 	"github.com/googleapis/gax-go/v2"
+	"github.com/jack-mcveigh/secretly/internal"
 )
 
 const testProjectId = "test-project"
@@ -28,7 +29,7 @@ type secretInfo struct {
 type stubClient struct {
 	secrets map[string][]byte
 
-	accessedCount              int
+	accessed                   bool
 	failIfAccessedMoreThanOnce bool
 }
 
@@ -45,10 +46,10 @@ func newStubClientWithSecrets() *stubClient {
 }
 
 func (c *stubClient) AccessSecretVersion(ctx context.Context, req *secretmanagerpb.AccessSecretVersionRequest, opts ...gax.CallOption) (*secretmanagerpb.AccessSecretVersionResponse, error) {
-	if c.failIfAccessedMoreThanOnce && c.accessedCount >= 1 {
+	if c.failIfAccessedMoreThanOnce && c.accessed {
 		return nil, errSecretAccessedMoreThanOnce
 	}
-	c.accessedCount++
+	c.accessed = true
 
 	if b, ok := c.secrets[req.Name]; ok {
 		resp := &secretmanagerpb.AccessSecretVersionResponse{
@@ -115,7 +116,7 @@ func TestGetSecretVersion(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			smc := newStubClientWithSecrets()
-			c := client{client: smc, projectID: testProjectId, secretCache: make(map[string]map[string][]byte)}
+			c := client{client: smc, projectID: testProjectId, secretCache: internal.NewSecretCache()}
 
 			got, err := c.GetSecretVersion(context.Background(), tt.secretInfo.name, tt.secretInfo.version)
 
@@ -162,7 +163,7 @@ func TestGetSecretVersionCaching(t *testing.T) {
 			c := client{
 				client:      smc,
 				projectID:   testProjectId,
-				secretCache: make(map[string]map[string][]byte),
+				secretCache: internal.NewSecretCache(),
 			}
 
 			var err error

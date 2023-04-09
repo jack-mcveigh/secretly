@@ -13,17 +13,19 @@ import (
 
 const secretVersionsFormat = "projects/%s/secrets/%s/versions/%s"
 
-type Client interface {
-	AccessSecretVersion(ctx context.Context, req *secretmanagerpb.AccessSecretVersionRequest, opts ...gax.CallOption) (*secretmanagerpb.AccessSecretVersionResponse, error)
-	Close() error
-}
+type (
+	Client interface {
+		AccessSecretVersion(ctx context.Context, req *secretmanagerpb.AccessSecretVersionRequest, opts ...gax.CallOption) (*secretmanagerpb.AccessSecretVersionResponse, error)
+		Close() error
+	}
 
-type client struct {
-	client    Client
-	projectID string
+	client struct {
+		client    Client
+		projectID string
 
-	secretCache map[string]map[string][]byte
-}
+		secretCache internal.SecretCache
+	}
+)
 
 // NewClient constructs a GCP client with the projectID
 // TODO: support options for secretmanager.NewClient
@@ -36,7 +38,7 @@ func NewClient(projectID string) (*client, error) {
 	c := &client{
 		client:      smc,
 		projectID:   projectID,
-		secretCache: make(map[string]map[string][]byte),
+		secretCache: internal.NewSecretCache(),
 	}
 	return c, nil
 }
@@ -63,7 +65,7 @@ func (c *client) Process(spec any, opts ...internal.ProcessOption) error {
 
 func (c *client) GetSecret(ctx context.Context, name string) ([]byte, error) {
 	b, err := c.getSecretVersion(ctx, name, "latest")
-	c.addSecretToCache(name, "latest", b)
+	c.secretCache.Add(name, "latest", b)
 	return b, err
 }
 
@@ -79,7 +81,7 @@ func (c *client) GetSecretVersion(ctx context.Context, name, version string) ([]
 		}
 	}
 
-	if b, hit := c.getSecretFromCache(name, version); hit {
+	if b, hit := c.secretCache.Get(name, version); hit {
 		return b, nil
 	}
 
@@ -88,31 +90,9 @@ func (c *client) GetSecretVersion(ctx context.Context, name, version string) ([]
 		return nil, err
 	}
 
-	c.addSecretToCache(name, version, b)
+	c.secretCache.Add(name, version, b)
 
 	return b, nil
-}
-
-// addSecretToCache adds the secret to the cache with the relationship
-// cache[name][version] = value
-func (c *client) addSecretToCache(name, version string, b []byte) {
-	if c.secretCache[name] == nil {
-		c.secretCache[name] = make(map[string][]byte)
-	}
-
-	c.secretCache[name][version] = b
-}
-
-// getSecretFromCache attempts to get the secret from the cache. Also returns a bool
-// indicating if the secret was present in the cache
-func (c *client) getSecretFromCache(name, version string) ([]byte, bool) {
-	if c.secretCache[name] == nil {
-		return nil, false
-	}
-	if b, ok := c.secretCache[name][version]; ok {
-		return b, true
-	}
-	return nil, false
 }
 
 // getSecret retrieves the a specific version of the secret from the GCP Secret Manager
