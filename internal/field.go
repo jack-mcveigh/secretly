@@ -31,6 +31,8 @@ type Field struct {
 	Value         reflect.Value
 }
 
+// NewField constructs a field referencing the provided reflect.Value with the tags from
+// the reflect.StructField applied
 func NewField(fValue reflect.Value, fStructField reflect.StructField) (Field, error) {
 	// reduce pointer to value/struct pointer. Initialize underlying struct if needed
 	// TODO: maybe remove struct handling, might not be needed for this implementation
@@ -151,6 +153,9 @@ func NewField(fValue reflect.Value, fStructField reflect.StructField) (Field, er
 	return newField, nil
 }
 
+// Name returns the resolved name of the field. If the secret type is "json" or "yaml",
+// the secret name and key name are combined. If "split_words" is true, the combination
+// of secret name and key name are split with an underscore
 func (f *Field) Name() string {
 	name := f.SecretName
 
@@ -165,6 +170,7 @@ func (f *Field) Name() string {
 	return name
 }
 
+// Set sets the field's underlying value
 func (f *Field) Set(b []byte) error {
 	switch f.SecretType {
 	case "text":
@@ -178,6 +184,7 @@ func (f *Field) Set(b []byte) error {
 	}
 }
 
+// setText sets the field's underlying value, handling the input as a "text" secret
 func (f *Field) setText(b []byte) error {
 	const ErrFailedConvertFormat = "failed to convert secret \"%s's\" key, \"%s\" to %s: %w"
 
@@ -235,6 +242,7 @@ func (f *Field) setText(b []byte) error {
 	return nil
 }
 
+// setJSON sets the field's underlying value, handling the input as a "json" secret
 func (f *Field) setJSON(b []byte) error {
 	var secretMap map[string]string
 
@@ -250,6 +258,7 @@ func (f *Field) setJSON(b []byte) error {
 	return fmt.Errorf("the json secret, \"%s\" does not contain key \"%s\"", f.SecretName, f.MapKeyName)
 }
 
+// setYAML sets the field's underlying value, handling the input as a "yaml" secret
 func (f *Field) setYAML(b []byte) error {
 	var secretMap map[string]string
 
@@ -265,6 +274,43 @@ func (f *Field) setYAML(b []byte) error {
 	return fmt.Errorf("the yaml secret, \"%s\" does not contain key \"%s\"", f.SecretName, f.MapKeyName)
 }
 
+// parseOptionalStructTagKey parses the provided key's value from the struct field,
+// returning the value as the type T, a bool indicating if the key was present, and an
+// error if the key's value was not a valid T
+func parseOptionalStructTagKey[T any](sf reflect.StructField, key string) (T, bool, error) {
+	var (
+		raw string
+		v   T
+		ok  bool
+		err error
+	)
+
+	if raw, ok = sf.Tag.Lookup(key); ok { // If key present
+		switch any(v).(type) {
+		case string:
+			v = any(raw).(T)
+		case int:
+			i, err := strconv.Atoi(raw)
+			if err != nil {
+				break
+			}
+			v = any(i).(T)
+		case bool:
+			b, err := strconv.ParseBool(raw)
+			if err != nil {
+				break
+			}
+			v = any(b).(T)
+		}
+
+		if err != nil {
+			return v, false, fmt.Errorf("%w: %w", ErrInvalidStructTagValue, err)
+		}
+	}
+	return v, ok, nil
+}
+
+// splitWords converts the camelCase/PascalCase string, s, to snake_case
 func splitWords(s string) string {
 	return RegexMatchCapitals.ReplaceAllString(s, "${1}_${2}")
 }

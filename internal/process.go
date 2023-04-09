@@ -1,16 +1,17 @@
 package internal
 
 import (
-	"fmt"
 	"reflect"
 	"regexp"
-	"strconv"
 )
 
 type ProcessOption func([]Field) error
 
 var RegexMatchCapitals = regexp.MustCompile("([a-z0-9])([A-Z])")
 
+// Process interprets the provided specification, returning a slice of fields
+// referencing the specification's fields. "ProcessOptions" can be provided to add
+// additional processing to the fields, like reading version info from the env or a file
 func Process(spec any, opts ...ProcessOption) ([]Field, error) {
 	// ensure spec is a struct pointer
 	sValue := reflect.ValueOf(spec)
@@ -60,37 +61,4 @@ func Process(spec any, opts ...ProcessOption) ([]Field, error) {
 	}
 
 	return fields, nil
-}
-
-func parseOptionalStructTagKey[T any](sf reflect.StructField, key string) (T, bool, error) {
-	var (
-		raw string
-		v   T
-		ok  bool
-		err error
-	)
-
-	if raw, ok = sf.Tag.Lookup(key); ok { // If key present
-		switch any(v).(type) {
-		case string:
-			v = any(raw).(T)
-		case int:
-			i, err := strconv.Atoi(raw)
-			if err != nil {
-				break
-			}
-			v = any(i).(T)
-		case bool:
-			b, err := strconv.ParseBool(raw)
-			if err != nil {
-				break
-			}
-			v = any(b).(T)
-		}
-
-		if err != nil {
-			return v, false, fmt.Errorf("%w: %w", ErrInvalidStructTagValue, err)
-		}
-	}
-	return v, ok, nil
 }

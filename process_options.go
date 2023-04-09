@@ -19,6 +19,11 @@ type (
 	}
 )
 
+// WithVersionsFromConfig returns an internal.ProcessOption used to retrieve secret
+// versions from the provided file.
+//
+// Types of version files are determined by their extensions.
+// Supported version file types are: JSON (.json) and YAML (.yaml,.yml)
 func WithVersionsFromConfig(filePath string) internal.ProcessOption {
 	return func(fields []internal.Field) error {
 		b, err := os.ReadFile(filePath)
@@ -38,6 +43,8 @@ func WithVersionsFromConfig(filePath string) internal.ProcessOption {
 	}
 }
 
+// setVersionsFromConfig retrieves version info for the fields by applying unmarshal to
+// the bytes, b
 func setVersionsFromConfig(unmarshal unmarshalFunc, b []byte, fields []internal.Field) error {
 	secretConfigMap := make(map[string]secretConfig, len(fields))
 
@@ -55,6 +62,11 @@ func setVersionsFromConfig(unmarshal unmarshalFunc, b []byte, fields []internal.
 	return nil
 }
 
+// WithVersionsFromEnv returns an internal.ProcessOption used to retrieve secret
+// versions from the environment. Environment variables are expected to be named as the
+// following:
+//
+// uppercase( prefix + "_" + field.Name() ) OR uppercase( field.Name() )
 func WithVersionsFromEnv(prefix string) internal.ProcessOption {
 	return func(fields []internal.Field) error {
 		if prefix != "" {

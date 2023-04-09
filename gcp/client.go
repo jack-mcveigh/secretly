@@ -25,6 +25,8 @@ type client struct {
 	secretCache map[string]map[string][]byte
 }
 
+// NewClient constructs a GCP client with the projectID
+// TODO: support options for secretmanager.NewClient
 func NewClient(projectID string) (*client, error) {
 	smc, err := secretmanager.NewClient(context.TODO())
 	if err != nil {
@@ -91,6 +93,8 @@ func (c *client) GetSecretVersion(ctx context.Context, name, version string) ([]
 	return b, nil
 }
 
+// addSecretToCache adds the secret to the cache with the relationship
+// cache[name][version] = value
 func (c *client) addSecretToCache(name, version string, b []byte) {
 	if c.secretCache[name] == nil {
 		c.secretCache[name] = make(map[string][]byte)
@@ -99,6 +103,8 @@ func (c *client) addSecretToCache(name, version string, b []byte) {
 	c.secretCache[name][version] = b
 }
 
+// getSecretFromCache attempts to get the secret from the cache. Also returns a bool
+// indicating if the secret was present in the cache
 func (c *client) getSecretFromCache(name, version string) ([]byte, bool) {
 	if c.secretCache[name] == nil {
 		return nil, false
@@ -109,6 +115,7 @@ func (c *client) getSecretFromCache(name, version string) ([]byte, bool) {
 	return nil, false
 }
 
+// getSecret retrieves the a specific version of the secret from the GCP Secret Manager
 func (c *client) getSecretVersion(ctx context.Context, name, version string) ([]byte, error) {
 	req := &secretmanagerpb.AccessSecretVersionRequest{
 		Name: fmt.Sprintf(secretVersionsFormat, c.projectID, name, version),
