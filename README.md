@@ -33,7 +33,7 @@ type Specification struct {
     // A secret named "Split_Text_Secret" that stores text data.
     SplitTextSecret       string `type:"text" split_words:"true"`
     
-    // A secret named "Json_Secret" that stores mapped data including a key "Map_Secret_Key".
+    // A secret named "Json_Secret" that stores mapped data including a key "Json_Secret_Key".
     JsonSecretKey          int `type:"json" secret_name:"Json_Secret" split_words:"true"`
 
     // A secret named "Json_Secret" that stores mapped data with a key "Json_Secret_Key_2".
@@ -51,11 +51,11 @@ type Specification struct {
 
 * __text__ - Plain text. Any secret value can be read as plain text.
 
-    > Example secret that stores text data:
-    >
-    > ```text
-    > sensitive data
-    > ```
+    Example secret that stores text data:
+
+    ```text
+    sensitive data
+    ```
 
 * __json__ - JSON map. The secret stores JSON data; read a specific field form the JSON map.
 
