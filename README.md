@@ -1,6 +1,6 @@
 # Secretly
 
-[![Tests workflow](https://img.shields.io/github/workflow/status/jack-mcveigh/secretly/Test%20Base?longCache=tru&label=tests&logo=github&logoColor=fff)](https://github.com/jack-mcveigh/secretly/actions?query=workflow%3ATest%20Base)
+[![Tests workflow](https://img.shields.io/github/actions/workflow/status/jack-mcveigh/secretly/unit-test-base.yaml?branch=main&longCache=tru&label=tests&logo=github&logoColor=fff)](https://github.com/jack-mcveigh/secretly/actions?query=workflow%3ATest%20Base)
 [![Go Report Card](https://goreportcard.com/badge/github.com/jack-mcveigh/secretly)](https://goreportcard.com/report/github.com/jack-mcveigh/secretly)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
