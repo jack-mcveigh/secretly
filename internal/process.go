@@ -24,7 +24,24 @@ func Process(spec any, opts ...ProcessOption) ([]Field, error) {
 	}
 	sType := sValue.Type()
 
-	// spec is a struct pointer, iterate over its fields
+	// spec is a struct pointer, process it
+	fields, err := process(sValue, sType)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, opt := range opts {
+		err := opt(fields)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return fields, nil
+}
+
+// process recursively processes each field.
+func process(sValue reflect.Value, sType reflect.Type) ([]Field, error) {
 	fields := make([]Field, 0, sValue.NumField())
 	for i := 0; i < sValue.NumField(); i++ {
 		f, fStructField := sValue.Field(i), sType.Field(i)
@@ -46,19 +63,21 @@ func Process(spec any, opts ...ProcessOption) ([]Field, error) {
 			continue
 		}
 
+		if fStructField.Type.Kind() == reflect.Struct {
+			fs, err := process(f, fStructField.Type)
+			if err != nil {
+				return nil, err
+			}
+
+			fields = append(fields, fs...)
+			continue
+		}
+
 		field, err := NewField(f, fStructField)
 		if err != nil {
 			return nil, err
 		}
 		fields = append(fields, field)
 	}
-
-	for _, opt := range opts {
-		err := opt(fields)
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	return fields, nil
 }
