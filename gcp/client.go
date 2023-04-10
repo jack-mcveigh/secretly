@@ -8,6 +8,7 @@ import (
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
 	"cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
 	"github.com/googleapis/gax-go/v2"
+	"github.com/jack-mcveigh/secretly"
 	"github.com/jack-mcveigh/secretly/internal"
 )
 
@@ -26,6 +27,9 @@ type (
 		secretCache internal.SecretCache
 	}
 )
+
+// Compile time check that client implements secretly.Client
+var _ secretly.Client = (*client)(nil)
 
 // NewClient constructs a GCP client with the projectID
 // TODO: support options for secretmanager.NewClient
