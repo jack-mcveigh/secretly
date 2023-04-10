@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 
 	"github.com/jack-mcveigh/secretly"
@@ -39,7 +40,7 @@ type SecretConfig struct {
 }
 
 func main() {
-	client, err := secretlygcp.NewClient(gcpProjectId)
+	client, err := secretlygcp.NewClient(context.Background(), gcpProjectId)
 	if err != nil {
 		log.Fatalf("Failed to initialize gcp secret manager client: %v", err)
 	}

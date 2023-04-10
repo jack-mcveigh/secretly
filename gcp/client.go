@@ -10,6 +10,7 @@ import (
 	"github.com/googleapis/gax-go/v2"
 	"github.com/jack-mcveigh/secretly"
 	"github.com/jack-mcveigh/secretly/internal"
+	"google.golang.org/api/option"
 )
 
 const secretVersionsFormat = "projects/%s/secrets/%s/versions/%s"
@@ -33,7 +34,7 @@ var _ secretly.Client = (*client)(nil)
 
 // NewClient constructs a GCP client with the projectID
 // TODO: support options for secretmanager.NewClient
-func NewClient(projectID string) (*client, error) {
+func NewClient(ctx context.Context, projectID string, opts ...option.ClientOption) (*client, error) {
 	smc, err := secretmanager.NewClient(context.TODO())
 	if err != nil {
 		return nil, err
