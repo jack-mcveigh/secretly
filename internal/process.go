@@ -14,17 +14,17 @@ var RegexMatchCapitals = regexp.MustCompile("([a-z0-9])([A-Z])")
 // additional processing to the fields, like reading version info from the env or a file
 func Process(spec any, opts ...ProcessOption) ([]Field, error) {
 	// ensure spec is a struct pointer
-	sValue := reflect.ValueOf(spec)
-	if sValue.Kind() != reflect.Ptr {
+	specValue := reflect.ValueOf(spec)
+	if specValue.Kind() != reflect.Ptr {
 		return nil, ErrInvalidSpecification
 	}
-	sValue = sValue.Elem()
-	if sValue.Kind() != reflect.Struct {
+	specValue = specValue.Elem()
+	if specValue.Kind() != reflect.Struct {
 		return nil, ErrInvalidSpecification
 	}
 
-	sType := sValue.Type()
-	fields, err := process(sValue, sType)
+	specType := specValue.Type()
+	fields, err := process(specValue, specType)
 	if err != nil {
 		return nil, err
 	}
@@ -40,10 +40,10 @@ func Process(spec any, opts ...ProcessOption) ([]Field, error) {
 }
 
 // process recursively processes each field.
-func process(sValue reflect.Value, sType reflect.Type) ([]Field, error) {
-	fields := make([]Field, 0, sValue.NumField())
-	for i := 0; i < sValue.NumField(); i++ {
-		f, fStructField := sValue.Field(i), sType.Field(i)
+func process(specValue reflect.Value, specType reflect.Type) ([]Field, error) {
+	fields := make([]Field, 0, specValue.NumField())
+	for i := 0; i < specValue.NumField(); i++ {
+		f, fStructField := specValue.Field(i), specType.Field(i)
 
 		// Get the ignored value, setting it to false if not explicitly set
 		ignored, _, err := parseOptionalStructTagKey[bool](fStructField, TagIgnored)
