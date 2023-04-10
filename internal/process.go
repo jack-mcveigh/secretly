@@ -22,9 +22,8 @@ func Process(spec any, opts ...ProcessOption) ([]Field, error) {
 	if sValue.Kind() != reflect.Struct {
 		return nil, ErrInvalidSpecification
 	}
-	sType := sValue.Type()
 
-	// spec is a struct pointer, process it
+	sType := sValue.Type()
 	fields, err := process(sValue, sType)
 	if err != nil {
 		return nil, err
@@ -47,7 +46,7 @@ func process(sValue reflect.Value, sType reflect.Type) ([]Field, error) {
 		f, fStructField := sValue.Field(i), sType.Field(i)
 
 		// Get the ignored value, setting it to false if not explicitly set
-		ignored, ok, err := parseOptionalStructTagKey[bool](fStructField, TagIgnored)
+		ignored, _, err := parseOptionalStructTagKey[bool](fStructField, TagIgnored)
 		if err != nil {
 			return nil, StructTagError{
 				Name: fStructField.Name,
@@ -55,29 +54,27 @@ func process(sValue reflect.Value, sType reflect.Type) ([]Field, error) {
 				Err:  err,
 			}
 		}
-		if !ok {
-			ignored = false
-		}
 
 		if ignored || !f.CanSet() {
 			continue
 		}
 
-		if fStructField.Type.Kind() == reflect.Struct {
+		switch fStructField.Type.Kind() {
+		case reflect.Interface | reflect.Array | reflect.Slice | reflect.Map:
+			// ignore these types
+		case reflect.Struct:
 			fs, err := process(f, fStructField.Type)
 			if err != nil {
 				return nil, err
 			}
-
 			fields = append(fields, fs...)
-			continue
+		default:
+			field, err := NewField(f, fStructField)
+			if err != nil {
+				return nil, err
+			}
+			fields = append(fields, field)
 		}
-
-		field, err := NewField(f, fStructField)
-		if err != nil {
-			return nil, err
-		}
-		fields = append(fields, field)
 	}
 	return fields, nil
 }
