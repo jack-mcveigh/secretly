@@ -6,6 +6,10 @@ import (
 	"testing"
 )
 
+type CorrectSubSpecification struct {
+	Text string
+}
+
 type CorrectSpecification struct {
 	Text           string
 	TextSplitWords string `split_words:"true"`
@@ -30,8 +34,14 @@ type CorrectSpecification struct {
 	// NOTE: split_words doesn't do anything when secret_name and key_name is provided
 	YamlAll string `type:"yaml" secret_name:"a_secret" key_name:"a_key" version:"latest" split_words:"true"`
 
-	Ignored string `ignored:"true"`
-	ignored string
+	ComposedSpecification CorrectSubSpecification
+
+	CorrectSubSpecification // test embedding
+
+	Ignored                      string `ignored:"true"`
+	ignored                      string
+	IgnoredComposedSpecification CorrectSubSpecification `ignored:"true"`
+	ignoredComposedSpecification CorrectSubSpecification
 }
 
 type TextWithKeyNameSpecification struct {
@@ -41,7 +51,7 @@ type TextWithKeyNameSpecification struct {
 func TestParsingCorrectSpecification(t *testing.T) {
 	want := correctSpecificationFields
 
-	spec := CorrectSpecification{ignored: "testing"}
+	spec := CorrectSpecification{ignored: "testing", ignoredComposedSpecification: CorrectSubSpecification{}}
 	got, err := Process(&spec)
 	if err != nil {
 		t.Errorf("Incorrect error. Want %v, got %v", nil, err)
@@ -200,5 +210,19 @@ var correctSpecificationFields = []Field{
 		SecretVersion: "latest",
 		MapKeyName:    "a_key",
 		SplitWords:    true,
+	},
+	{
+		SecretType:    "text",
+		SecretName:    "Text",
+		SecretVersion: "0",
+		MapKeyName:    "",
+		SplitWords:    false,
+	},
+	{
+		SecretType:    "text",
+		SecretName:    "Text",
+		SecretVersion: "0",
+		MapKeyName:    "",
+		SplitWords:    false,
 	},
 }
