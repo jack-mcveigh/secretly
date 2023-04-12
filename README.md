@@ -1,6 +1,7 @@
 # Secretly
 
-[![Tests workflow](https://img.shields.io/github/actions/workflow/status/jack-mcveigh/secretly/unit-test-base.yaml?branch=main&longCache=tru&label=tests&logo=github&logoColor=fff)](https://github.com/jack-mcveigh/secretly/actions?query=workflow%3ATest%20Base)
+[![GoDoc](https://godoc.org/github.com/jack-mcveigh/secretly?status.svg)](https://godoc.org/github.com/jack-mcveigh/secretly)
+[![Tests workflow](https://img.shields.io/github/actions/workflow/status/jack-mcveigh/secretly/unit-test-base.yaml?branch=main&longCache=true&label=tests&logo=github&logoColor=fff)](https://github.com/jack-mcveigh/secretly/actions?query=workflow%3ATest%20Base)
 [![Go Report Card](https://goreportcard.com/badge/github.com/jack-mcveigh/secretly)](https://goreportcard.com/report/github.com/jack-mcveigh/secretly)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -8,9 +9,9 @@ ___Secretly___ was created to allow Go applications to easily interface with pop
 
 Below is a list of the currently supported secret management services:
 
-* Google Cloud Platform's Secret Manager
+* [Google Cloud Platform's Secret Manager](https://cloud.google.com/secret-manager)
 
-If there's a secret management service missing that you'd like to see, create a PR!
+If there's a secret management service missing that you'd like to see, create a Feature Request!
 
 ## Usage
 
