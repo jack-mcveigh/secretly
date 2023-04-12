@@ -54,6 +54,9 @@ func NewField(fValue reflect.Value, fStructField reflect.StructField) (Field, er
 		err      error
 	)
 
+	// Set the reference to the field's reflection
+	newField.Value = fValue
+
 	// Get the split_words value, setting it to false if not explicitly set
 	newField.SplitWords, ok, err = parseOptionalStructTagKey[bool](fStructField, TagSplitWords)
 	if err != nil {
