@@ -13,6 +13,7 @@ var (
 	ErrSecretTypeDoesNotSupportTagKey = errors.New("secret type does not support this tag key")
 )
 
+// StructTagError describes an error resulting from an issue with a struct tag.
 type StructTagError struct {
 	Name string
 	Key  string

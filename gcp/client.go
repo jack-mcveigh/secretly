@@ -15,25 +15,32 @@ import (
 
 const secretVersionsFormat = "projects/%s/secrets/%s/versions/%s"
 
-type (
-	Client interface {
-		AccessSecretVersion(ctx context.Context, req *secretmanagerpb.AccessSecretVersionRequest, opts ...gax.CallOption) (*secretmanagerpb.AccessSecretVersionResponse, error)
-		Close() error
-	}
+// gcpsmc describes required GCP Secret Manager client methods
+type gcpsmc interface {
+	AccessSecretVersion(ctx context.Context, req *secretmanagerpb.AccessSecretVersionRequest, opts ...gax.CallOption) (*secretmanagerpb.AccessSecretVersionResponse, error)
+	Close() error
+}
 
-	client struct {
-		client    Client
-		projectID string
+// client is the GCP Secret Manager client wrapper.
+// Implements secretly.Client
+type client struct {
+	// client is the GCP Secret Manager client.
+	client gcpsmc
 
-		secretCache internal.SecretCache
-	}
-)
+	// project id identifies the GCP project from which to retrieve secrets.
+	projectID string
 
-// Compile time check that client implements secretly.Client
+	// secretCache is the cache that stores secrets => versions => content
+	// to reduce secret manager accesses.
+	secretCache internal.SecretCache
+}
+
+// Compile time check to assert that client implements secretly.Client
 var _ secretly.Client = (*client)(nil)
 
-// NewClient constructs a GCP client with the projectID
-// TODO: support options for secretmanager.NewClient
+// NewClient returns a GCP client wrapper
+// configured for projectID, with opts applied.
+// Will error if authentication with the secret manager fails.
 func NewClient(ctx context.Context, projectID string, opts ...option.ClientOption) (*client, error) {
 	smc, err := secretmanager.NewClient(context.TODO())
 	if err != nil {
@@ -100,7 +107,7 @@ func (c *client) GetSecretVersion(ctx context.Context, name, version string) ([]
 	return b, nil
 }
 
-// getSecret retrieves the a specific version of the secret from the GCP Secret Manager
+// getSecret retrieves the a specific version of the secret from the GCP Secret Manager.
 func (c *client) getSecretVersion(ctx context.Context, name, version string) ([]byte, error) {
 	req := &secretmanagerpb.AccessSecretVersionRequest{
 		Name: fmt.Sprintf(secretVersionsFormat, c.projectID, name, version),

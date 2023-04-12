@@ -19,11 +19,13 @@ type (
 	}
 )
 
-// WithVersionsFromConfig returns an internal.ProcessOption used to retrieve secret
-// versions from the provided file.
+// WithVersionsFromConfig returns an internal.ProcessOption which overwrites
+// the specified/default secret versions with versions provided in the file.
 //
 // Types of version files are determined by their extensions.
-// Supported version file types are: JSON (.json) and YAML (.yaml,.yml)
+// Accepted version file types are:
+//  1. JSON (.json)
+//  2. YAML (.yaml,.yml)
 func WithVersionsFromConfig(filePath string) internal.ProcessOption {
 	return func(fields []internal.Field) error {
 		b, err := os.ReadFile(filePath)
@@ -43,8 +45,8 @@ func WithVersionsFromConfig(filePath string) internal.ProcessOption {
 	}
 }
 
-// setVersionsFromConfig retrieves version info for the fields by applying unmarshal to
-// the bytes, b
+// setVersionsFromConfig retrieves version info for the fields
+// by applying unmarshal to the bytes, b.
 func setVersionsFromConfig(unmarshal unmarshalFunc, b []byte, fields []internal.Field) error {
 	secretConfigMap := make(map[string]secretConfig, len(fields))
 
@@ -62,11 +64,14 @@ func setVersionsFromConfig(unmarshal unmarshalFunc, b []byte, fields []internal.
 	return nil
 }
 
-// WithVersionsFromEnv returns an internal.ProcessOption used to retrieve secret
-// versions from the environment. Environment variables are expected to be named as the
-// following:
+// WithVersionsFromEnv returns an internal.ProcessOption which overwrites
+// the specified/default secret versions with versions from the environment.
+// Environment variables are to be named with the following logic:
 //
-// uppercase( prefix + "_" + field.Name() ) OR uppercase( field.Name() )
+//	if prefix
+//		uppercase( prefix + "_" + field.Name() )
+//	else
+//		uppercase( field.Name() )
 func WithVersionsFromEnv(prefix string) internal.ProcessOption {
 	return func(fields []internal.Field) error {
 		if prefix != "" {

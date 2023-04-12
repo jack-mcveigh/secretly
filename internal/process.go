@@ -9,9 +9,13 @@ type ProcessOption func([]Field) error
 
 var RegexMatchCapitals = regexp.MustCompile("([a-z0-9])([A-Z])")
 
-// Process interprets the provided specification, returning a slice of fields
-// referencing the specification's fields. "ProcessOptions" can be provided to add
-// additional processing to the fields, like reading version info from the env or a file
+// Process interprets the provided specification,
+// returning a slice of fields referencing the specification's fields.
+// opts can be provided to add additional processing to the fields,
+// like reading version info from the env or a file.
+//
+// spec must be a pointer to a struct,
+// otherwise [ErrInvalidSpecification] is returned.
 func Process(spec any, opts ...ProcessOption) ([]Field, error) {
 	// ensure spec is a struct pointer
 	specValue := reflect.ValueOf(spec)
@@ -39,7 +43,8 @@ func Process(spec any, opts ...ProcessOption) ([]Field, error) {
 	return fields, nil
 }
 
-// process recursively processes each field.
+// process recursively processes each the specValue,
+// returning a slice of its fields.
 func process(specValue reflect.Value, specType reflect.Type) ([]Field, error) {
 	fields := make([]Field, 0, specValue.NumField())
 	for i := 0; i < specValue.NumField(); i++ {
