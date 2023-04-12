@@ -11,15 +11,20 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// Default values for optional field tags
 const (
 	DefaultType    = "text"
 	DefaultVersion = "0"
-	TagIgnored     = "ignored"
-	TagKeyName     = "key_name"
-	TagSecretName  = "secret_name"
-	TagSplitWords  = "split_words"
-	TagType        = "type"
-	TagVersion     = "version"
+)
+
+// All valid tags
+const (
+	TagIgnored    = "ignored"
+	TagKeyName    = "key_name"
+	TagSecretName = "secret_name"
+	TagSplitWords = "split_words"
+	TagType       = "type"
+	TagVersion    = "version"
 )
 
 type Field struct {
@@ -173,7 +178,7 @@ func (f *Field) Name() string {
 	return name
 }
 
-// Set sets the field's underlying value
+// Set sets the field's reflect.Value with b.
 func (f *Field) Set(b []byte) error {
 	switch f.SecretType {
 	case "text":
@@ -187,7 +192,8 @@ func (f *Field) Set(b []byte) error {
 	}
 }
 
-// setText sets the field's underlying value, handling the input as a "text" secret
+// setText sets the field's underlying value,
+// handling the input as a "text" secret.
 func (f *Field) setText(b []byte) error {
 	const ErrFailedConvertFormat = "failed to convert secret \"%s's\" key, \"%s\" to %s: %w"
 
@@ -245,7 +251,8 @@ func (f *Field) setText(b []byte) error {
 	return nil
 }
 
-// setJSON sets the field's underlying value, handling the input as a "json" secret
+// setJSON sets the field's underlying value,
+// handling the input as a "json" secret.
 func (f *Field) setJSON(b []byte) error {
 	var secretMap map[string]string
 
@@ -261,7 +268,8 @@ func (f *Field) setJSON(b []byte) error {
 	return fmt.Errorf("the json secret, \"%s\" does not contain key \"%s\"", f.SecretName, f.MapKeyName)
 }
 
-// setYAML sets the field's underlying value, handling the input as a "yaml" secret
+// setYAML sets the field's underlying value,
+// handling the input as a "yaml" secret
 func (f *Field) setYAML(b []byte) error {
 	var secretMap map[string]string
 
