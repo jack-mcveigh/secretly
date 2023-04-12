@@ -57,9 +57,14 @@ func TestParsingCorrectSpecification(t *testing.T) {
 		t.Errorf("Incorrect error. Want %v, got %v", nil, err)
 	}
 
-	// Don't check reflect.Value for equality
-	for i := range got {
-		got[i].Value = reflect.Value{}
+	// Ensure reflect.Value is not already the zero value.
+	// If it isn't set it to the zero value
+	for i, field := range got {
+		v := reflect.Value{}
+		if field.Value == v {
+			t.Errorf("Incorrect field.Value. Got the zero value, should be something else")
+		}
+		got[i].Value = v
 	}
 
 	if !reflect.DeepEqual(want, got) {

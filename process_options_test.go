@@ -278,8 +278,12 @@ func TestWithVersionsFromEnv(t *testing.T) {
 			}
 
 			// Don't check reflect.Value for equality
-			for i := range fields {
-				fields[i].Value = reflect.Value{}
+			for i, field := range fields {
+				v := reflect.Value{}
+				if field.Value == v {
+					t.Errorf("Incorrect field.Value. Got the zero value, should be something else")
+				}
+				fields[i].Value = v
 			}
 
 			if !reflect.DeepEqual(tt.want, fields) {
