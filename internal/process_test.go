@@ -13,26 +13,29 @@ type CorrectSubSpecification struct {
 type CorrectSpecification struct {
 	Text           string
 	TextSplitWords string `split_words:"true"`
-	TextSecretName string `secret_name:"a_secret"`
+	TextSecretName string `name:"a_secret"`
 	TextVersion    string `version:"latest"`
-	// NOTE: split_words doesn't do anything when secret_name is provided
-	TextAll string `secret_name:"a_secret" version:"latest" split_words:"true"`
+	// NOTE: split_words doesn't do anything when name is provided.
+	// It only modifies the default name and key, the struct field name.
+	TextAll string `name:"a_secret" version:"latest" split_words:"true"`
 
 	Json           string `type:"json"`
 	JsonSplitWords string `type:"json" split_words:"true"`
-	JsonSecretName string `type:"json" secret_name:"a_secret"`
-	JsonKeyName    string `type:"json" key_name:"a_key"`
+	JsonSecretName string `type:"json" name:"a_secret"`
+	JsonKeyName    string `type:"json" key:"a_key"`
 	JsonVersion    string `type:"json" version:"1"`
-	// NOTE: split_words doesn't do anything when secret_name and key_name is provided
-	JsonAll string `type:"json" secret_name:"a_secret" key_name:"a_key" version:"latest" split_words:"true"`
+	// NOTE: split_words doesn't do anything when name and key is provided.
+	// It only modifies the default name and key, the struct field name.
+	JsonAll string `type:"json" name:"a_secret" key:"a_key" version:"latest" split_words:"true"`
 
 	Yaml           string `type:"yaml"`
 	YamlSplitWords string `type:"yaml" split_words:"true"`
-	YamlSecretName string `type:"yaml" secret_name:"a_secret"`
-	YamlKeyName    string `type:"yaml" key_name:"a_key"`
+	YamlSecretName string `type:"yaml" name:"a_secret"`
+	YamlKeyName    string `type:"yaml" key:"a_key"`
 	YamlVersion    string `type:"yaml" version:"1"`
-	// NOTE: split_words doesn't do anything when secret_name and key_name is provided
-	YamlAll string `type:"yaml" secret_name:"a_secret" key_name:"a_key" version:"latest" split_words:"true"`
+	// NOTE: split_words doesn't do anything when name and key is provided.
+	// It only modifies the default name and key, the struct field name.
+	YamlAll string `type:"yaml" name:"a_secret" key:"a_key" version:"latest" split_words:"true"`
 
 	ComposedSpecification CorrectSubSpecification
 
@@ -45,7 +48,7 @@ type CorrectSpecification struct {
 }
 
 type TextWithKeyNameSpecification struct {
-	TextKeyName string `secret_name:"a_secret" key_name:"a_key"`
+	TextKeyName string `name:"a_secret" key:"a_key"`
 }
 
 func TestParsingCorrectSpecification(t *testing.T) {

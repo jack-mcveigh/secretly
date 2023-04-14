@@ -13,8 +13,8 @@ import (
 
 type TestingSpecification struct {
 	TextSecret string `split_words:"true"`
-	JsonSecret string `type:"json" key_name:"Key" split_words:"true"`
-	YamlSecret string `type:"yaml" key_name:"Key" split_words:"true"`
+	JsonSecret string `type:"json" key:"Key" split_words:"true"`
+	YamlSecret string `type:"yaml" key:"Key" split_words:"true"`
 }
 
 func newTestingSpecificationFields() []internal.Field {

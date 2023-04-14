@@ -26,25 +26,37 @@ Below is an example structure definition detailing default behavior, and the ava
 ```go
 type Specification struct {
     // A secret named "TextSecret" that stores text data.
-    TextSecret            string `type:"text"`
+    TextSecret string `type:"text"`
 
-    // A secret named "TextSecretVersion" that stores text data. Rather than retrieving the latest version, retrieve version 1.
+    // A secret named "TextSecretVersion" that stores text data.
+    // Rather than retrieving the latest version, retrieve version 1.
     TextSecretWithVersion1 string `type:"text" version:"1"`
 
     // A secret named "Split_Text_Secret" that stores text data.
-    SplitTextSecret       string `type:"text" split_words:"true"`
-    
-    // A secret named "Json_Secret" that stores mapped data including a key "Json_Secret_Key".
-    JsonSecretKey          int `type:"json" secret_name:"Json_Secret" split_words:"true"`
+    SplitTextSecret string `type:"text" split_words:"true"`
 
-    // A secret named "Json_Secret" that stores mapped data with a key "Json_Secret_Key_2".
-    JsonSecretExplicitKey  float64 `type:"json" secret_name:"Json_Secret" key_name:"Json_Secret_Key_2"`
+    // A secret named "Json_Secret" that stores mapped data
+    // including a key "Json_Secret_Key".
+    JsonSecretKey int `type:"json" name:"Json_Secret" split_words:"true"`
+
+    // A secret named "Json_Secret" that stores mapped data
+    // including a key "Json_Secret_Key_2".
+    JsonSecretExplicitKey float64 `type:"json" name:"Json_Secret" key:"Json_Secret_Key_2"`
 
     // Ignored.
-    IgnoredField          string `ignored:"true"`
+    IgnoredField string `ignored:"true"`
 
     // Also ignored.
-    ignoredField          string
+    ignoredField string
+
+    // The fields from the nested struct are also processed
+    SubSpecification SubSpecification
+}
+
+type SubSpecification struct {
+    // A secret named "SubTextSecret" that stores text data.
+    // Since the type is not specified, the default type, text, is used.
+    SubTextSecret string
 }
 ```
 
@@ -52,13 +64,13 @@ type Specification struct {
 
 * __text__ - Plain text. Any secret value can be read as plain text.
 
-    Example secret that stores text data:
+    Example secrets that stores text data:
 
     ```text
     sensitive data
     ```
 
-* __json__ - JSON map. The secret stores JSON data; read a specific field form the JSON map.
+* __json__ - JSON map. The secret stores JSON data; read a specific field from the JSON map. Note: If you want to read the entire json object, use the text type.
 
     _Example secret that stores a JSON map:_
 
@@ -68,7 +80,7 @@ type Specification struct {
     }
     ```
 
-* __yaml__ - YAML map. The secret stores YAML data; read a specific field form the YAML map.
+* __yaml__ - YAML map. The secret stores YAML data; read a specific field from the YAML map. Note: If you want to read the entire json object, use the text type.
 
     _Example secret that stores a YAML map:_
 
@@ -106,9 +118,9 @@ Secretly provides two options for specifying secret versions other than the __ve
         ...
 
         type Secrets struct {
-            DatabaseUsername string `type:"yaml" secret_name:"My-DB-Credentials" key_name:"username" split_words:"true"`
+            DatabaseUsername string `type:"yaml" name:"My-DB-Credentials" key:"username" split_words:"true"`
 
-            DatabasePassword string `type:"yaml" secret_name:"My-DB-Credentials" key_name:"password" split_words:"true"`
+            DatabasePassword string `type:"yaml" name:"My-DB-Credentials" key:"password" split_words:"true"`
         }
 
         func example(client secretly.Client) Secrets {
@@ -142,9 +154,9 @@ Secretly provides two options for specifying secret versions other than the __ve
         ...
 
         type Secrets struct {
-            DatabaseUsername string `type:"yaml" secret_name:"My-DB-Credentials" key_name:"username" split_words:"true"`
+            DatabaseUsername string `type:"yaml" name:"My-DB-Credentials" key:"username" split_words:"true"`
 
-            DatabasePassword string `type:"yaml" secret_name:"My-DB-Credentials" key_name:"password" split_words:"true"`
+            DatabasePassword string `type:"yaml" name:"My-DB-Credentials" key:"password" split_words:"true"`
         }
 
         func example(client secretly.Client) Secrets {

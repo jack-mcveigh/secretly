@@ -15,16 +15,12 @@ import (
 const (
 	DefaultType    = "text"
 	DefaultVersion = "0"
-)
-
-// All valid tags
-const (
-	TagIgnored    = "ignored"
-	TagKeyName    = "key_name"
-	TagSecretName = "secret_name"
-	TagSplitWords = "split_words"
-	TagType       = "type"
-	TagVersion    = "version"
+	TagIgnored     = "ignored"
+	TagKey         = "key"
+	TagName        = "name"
+	TagSplitWords  = "split_words"
+	TagType        = "type"
+	TagVersion     = "version"
 )
 
 type Field struct {
@@ -98,13 +94,13 @@ func NewField(fValue reflect.Value, fStructField reflect.StructField) (Field, er
 		}
 	}
 
-	// Get the secret_name value, setting it to the field's name if not explicitly set.
+	// Get the name value, setting it to the field's name if not explicitly set.
 	// Split the words if the default value was used and split_words was set to true
-	newField.SecretName, ok, err = parseOptionalStructTagKey[string](fStructField, TagSecretName)
+	newField.SecretName, ok, err = parseOptionalStructTagKey[string](fStructField, TagName)
 	if err != nil {
 		return Field{}, StructTagError{
 			Name: fStructField.Name,
-			Key:  TagSecretName,
+			Key:  TagName,
 			Err:  err,
 		}
 	}
@@ -115,16 +111,16 @@ func NewField(fValue reflect.Value, fStructField reflect.StructField) (Field, er
 		}
 	}
 
-	// Get the key_name value, if the type is "json" or "yaml", and setting it to the field's name
+	// Get the key value, if the type is "json" or "yaml", and setting it to the field's name
 	// if not explicitly set. Split the words if the default value was used and
 	// split_words was set to true
 	switch newField.SecretType {
 	case "json", "yaml":
-		newField.MapKeyName, ok, err = parseOptionalStructTagKey[string](fStructField, TagKeyName)
+		newField.MapKeyName, ok, err = parseOptionalStructTagKey[string](fStructField, TagKey)
 		if err != nil {
 			return Field{}, StructTagError{
 				Name: fStructField.Name,
-				Key:  TagKeyName,
+				Key:  TagKey,
 				Err:  err,
 			}
 		}
@@ -135,10 +131,10 @@ func NewField(fValue reflect.Value, fStructField reflect.StructField) (Field, er
 			}
 		}
 	default:
-		if _, ok = fStructField.Tag.Lookup(TagKeyName); ok {
+		if _, ok = fStructField.Tag.Lookup(TagKey); ok {
 			return Field{}, StructTagError{
 				Name: fStructField.Name,
-				Key:  TagKeyName,
+				Key:  TagKey,
 				Err:  ErrSecretTypeDoesNotSupportTagKey,
 			}
 		}
