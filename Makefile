@@ -1,10 +1,10 @@
 all: build
 
-build:
-	go build -o bin/ ./cmd/...
+build-examples:
+	go build -o examples/bin/ ./examples/...
 
 clean:
-	$(RM) -r bin *.out
+	@$(RM) -r examples/bin *.out
 
 coverage-report:
 	go test -coverprofile cover.out ./...
@@ -12,7 +12,10 @@ coverage-report:
 coverage-report-visual: coverage-report
 	go tool cover -html=cover.out
 
-test unit-test:
+test: unit-test build-examples clean
+
+unit-test: 
 	go test -v -cover ./...
 
-.PHONY: all build clean coverage-report coverage-report-visual test unit-test
+.PHONY: all build-examples clean
+.PHONY: coverage-report coverage-report-visual test unit-test
