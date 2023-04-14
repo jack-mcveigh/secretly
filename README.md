@@ -21,27 +21,40 @@ See the brief overview below or check out our [examples](examples).
 
 ### Tag Support
 
+#### Valid Tags
+
+* __type__ - The secret content's structure.
+  * _Valid Values_: "text", "json", "yaml"
+  * _Default_: "text"
+* __name__ - The secret's name
+* __key__ - The specific field to extract from the secret's content. Note: Requires type "json" or "yaml".
+  * _Default_: The struct field name (split if __split_words__ is true).
+* __version__ - The version of the secret to retrieve.
+  * _Default_: 0 (translates to the latest version within the client wrappers, e.g. with GCP Secret Manager, 0 -> "latest")
+* __split_words__ - If the field name is used as the secret __name__ and/or __key__, split it with underscores.
+  * _Default_: false
+
 Below is an example structure definition detailing default behavior, and the available tags:
 
 ```go
 type Specification struct {
-    // A secret named "TextSecret" that stores text data.
+    // The latest version of a secret named "TextSecret" that stores text data.
     TextSecret string `type:"text"`
 
-    // A secret named "TextSecretVersion" that stores text data.
+    // The first version of a secret named "TextSecretVersion" that stores text data.
     // Rather than retrieving the latest version, retrieve version 1.
     TextSecretWithVersion1 string `type:"text" version:"1"`
 
-    // A secret named "Split_Text_Secret" that stores text data.
+    // The latest version of a secret named "Split_Text_Secret" that stores text data.
     SplitTextSecret string `type:"text" split_words:"true"`
 
-    // A secret named "Json_Secret" that stores mapped data
+    // The latest version of a secret named "Json_Secret" that stores json data
     // including a key "Json_Secret_Key".
     JsonSecretKey int `type:"json" name:"Json_Secret" split_words:"true"`
 
-    // A secret named "Json_Secret" that stores mapped data
-    // including a key "Json_Secret_Key_2".
-    JsonSecretExplicitKey float64 `type:"json" name:"Json_Secret" key:"Json_Secret_Key_2"`
+    // The latest version of a secret named "Yaml_Secret" that stores yaml data
+    // including a key "Yaml_Secret_Key".
+    YamlSecretExplicitKey float64 `type:"json" name:"Yaml_Secret" key:"Yaml_Secret_Key"`
 
     // Ignored.
     IgnoredField string `ignored:"true"`
@@ -49,14 +62,18 @@ type Specification struct {
     // Also ignored.
     ignoredField string
 
-    // The fields from the nested struct are also processed
+    // The fields from the nested struct are also processed.
     SubSpecification SubSpecification
 }
 
 type SubSpecification struct {
-    // A secret named "SubTextSecret" that stores text data.
+    // The latest version of a secret named "SubTextSecret" that stores text data.
     // Since the type is not specified, the default type, text, is used.
     SubTextSecret string
+
+    // The latest version of a secret named "SubJsonSecretAndKey" that stores yaml data
+    // including a key "SubJsonSecretAndKey".
+    SubJsonSecretAndKey string `type:"json"`
 }
 ```
 
