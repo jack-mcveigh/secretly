@@ -12,9 +12,7 @@ coverage-report:
 coverage-report-visual: coverage-report
 	go tool cover -html=cover.out
 
-test: unit-test build-examples clean
-
-unit-test: 
+test unit-test: 
 	go test -v -cover ./...
 
 .PHONY: all build-examples clean
