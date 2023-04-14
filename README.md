@@ -80,7 +80,7 @@ type SubSpecification struct {
     }
     ```
 
-* __yaml__ - YAML map. The secret stores YAML data; read a specific field from the YAML map. Note: If you want to read the entire json object, use the text type.
+* __yaml__ - YAML map. The secret stores YAML data; read a specific field from the YAML map. Note: If you want to read the entire yaml mapping, use the text type.
 
     _Example secret that stores a YAML map:_
 
