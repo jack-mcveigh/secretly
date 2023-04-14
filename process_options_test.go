@@ -14,7 +14,7 @@ import (
 type TestingSpecification struct {
 	TextSecret string `split_words:"true"`
 	JsonSecret string `type:"json" key:"Key" split_words:"true"`
-	YamlSecret string `type:"yaml" key:"Key" split_words:"true"`
+	YamlSecret string `type:"yaml" key:"Key"`
 }
 
 func newTestingSpecificationFields() []internal.Field {
@@ -166,9 +166,9 @@ func TestWithVersionsFromEnv(t *testing.T) {
 			name:   "All Env Vars Exist",
 			prefix: "TEST",
 			envVarMap: map[string]string{
-				"TEST_TEXT_SECRET":     "1",
-				"TEST_JSON_SECRET_KEY": "latest",
-				"TEST_YAML_SECRET_KEY": "latest",
+				"TEST_TEXT_SECRET_VERSION":     "1",
+				"TEST_JSON_SECRET_KEY_VERSION": "latest",
+				"TEST_YAMLSECRETKEY_VERSION":   "latest",
 			},
 			want: []internal.Field{
 				{
@@ -187,10 +187,10 @@ func TestWithVersionsFromEnv(t *testing.T) {
 				},
 				{
 					SecretType:    "yaml",
-					SecretName:    "Yaml_Secret",
+					SecretName:    "YamlSecret",
 					SecretVersion: "latest",
 					MapKeyName:    "Key",
-					SplitWords:    true,
+					SplitWords:    false,
 				},
 			},
 			wantErr: nil,
@@ -199,8 +199,8 @@ func TestWithVersionsFromEnv(t *testing.T) {
 			name:   "One Env Var Missing",
 			prefix: "TEST",
 			envVarMap: map[string]string{
-				"TEST_JSON_SECRET_KEY": "latest",
-				"TEST_YAML_SECRET_KEY": "latest",
+				"TEST_JSON_SECRET_KEY_VERSION": "latest",
+				"TEST_YAMLSECRETKEY_VERSION":   "latest",
 			},
 			want: []internal.Field{
 				{
@@ -219,10 +219,10 @@ func TestWithVersionsFromEnv(t *testing.T) {
 				},
 				{
 					SecretType:    "yaml",
-					SecretName:    "Yaml_Secret",
+					SecretName:    "YamlSecret",
 					SecretVersion: "latest",
 					MapKeyName:    "Key",
-					SplitWords:    true,
+					SplitWords:    false,
 				},
 			},
 			wantErr: nil,
@@ -248,10 +248,10 @@ func TestWithVersionsFromEnv(t *testing.T) {
 				},
 				{
 					SecretType:    "yaml",
-					SecretName:    "Yaml_Secret",
+					SecretName:    "YamlSecret",
 					SecretVersion: "0",
 					MapKeyName:    "Key",
-					SplitWords:    true,
+					SplitWords:    false,
 				},
 			},
 			wantErr: nil,
@@ -309,7 +309,7 @@ var (
 	"Json_Secret_Key": {
 		"version": "latest"
 	},
-	"Yaml_Secret_Key": {
+	"YamlSecretKey": {
 		"version": "latest"
 	}
 }`)
@@ -322,7 +322,7 @@ var (
 	"Json_Secret_Key": {
 		"version": "latest"
 	},
-	"Yaml_Secret_Key": {
+	"YamlSecretKey": {
 		"version": "latest"
 	}
 }`)
@@ -331,7 +331,7 @@ var (
     version: 1
 Json_Secret_Key:
     version: latest
-Yaml_Secret_Key:
+YamlSecretKey:
     version: latest
 `)
 
@@ -340,7 +340,7 @@ Text_Secret:
     version: 1
 Json_Secret_Key:
     version: latest
-Yaml_Secret_Key:
+YamlSecretKey:
     version: latest
 `)
 )

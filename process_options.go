@@ -69,9 +69,9 @@ func setVersionsFromConfig(unmarshal unmarshalFunc, b []byte, fields []internal.
 // Environment variables are to be named with the following logic:
 //
 //	if prefix
-//		uppercase( prefix + "_" + field.Name() )
+//		uppercase( prefix + "_" + field.Name() ) + "_VERSION"
 //	else
-//		uppercase( field.Name() )
+//		uppercase( field.Name() ) + "_VERSION"
 func WithVersionsFromEnv(prefix string) internal.ProcessOption {
 	return func(fields []internal.Field) error {
 		if prefix != "" {
@@ -80,7 +80,7 @@ func WithVersionsFromEnv(prefix string) internal.ProcessOption {
 
 		for i, field := range fields {
 			name := strings.ReplaceAll(field.Name(), "-", "_")
-			key := strings.ToUpper(prefix + name)
+			key := strings.ToUpper(prefix + name + "_VERSION")
 			if v, ok := os.LookupEnv(key); ok {
 				fields[i].SecretVersion = v // TODO: Support types other than string
 			}

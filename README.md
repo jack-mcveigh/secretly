@@ -21,7 +21,7 @@ See the brief overview below or check out our [examples](examples).
 
 ### Tag Support
 
-#### Valid Tags
+#### Available Tags
 
 * __type__ - The secret content's structure.
   * _Valid Values_: "text", "json", "yaml"
@@ -31,7 +31,7 @@ See the brief overview below or check out our [examples](examples).
   * _Default_: The struct field name (split if __split_words__ is true).
 * __version__ - The version of the secret to retrieve.
   * _Default_: 0 (translates to the latest version within the client wrappers, e.g. with GCP Secret Manager, 0 -> "latest")
-* __split_words__ - If the field name is used as the secret __name__ and/or __key__, split it with underscores.
+* __split_words__ - If the field name is used as the secret __name__ and/or __key__, split it with underscores. If set to true and a process option is provided that combines __name__ and __key__, the __name__ and __key__ will be separated with an underscore.
   * _Default_: false
 
 Below is an example structure definition detailing default behavior, and the available tags:
@@ -123,7 +123,7 @@ Secretly provides two options for specifying secret versions other than the __ve
             "My-DB-Credentials_username": {
                 "version": "latest"
             },
-            "My-DB-Credentials_password": {
+            "My-DB-Credentialspassword": {
                 "version": "5"
             }
         }
@@ -137,7 +137,7 @@ Secretly provides two options for specifying secret versions other than the __ve
         type Secrets struct {
             DatabaseUsername string `type:"yaml" name:"My-DB-Credentials" key:"username" split_words:"true"`
 
-            DatabasePassword string `type:"yaml" name:"My-DB-Credentials" key:"password" split_words:"true"`
+            DatabasePassword string `type:"yaml" name:"My-DB-Credentials" key:"password"`
         }
 
         func example(client secretly.Client) Secrets {
@@ -161,8 +161,8 @@ Secretly provides two options for specifying secret versions other than the __ve
     * Export environment variables:
 
         ```bash
-        export EXAMPLE_MY_DB_CREDENTIALS_USERNAME=latest
-        export EXAMPLE_MY_DB_CREDENTIALS_PASSWORD=5
+        export EXAMPLE_MY_DB_CREDENTIALS_USERNAME_VERSION=latest
+        export EXAMPLE_MYDBCREDENTIALSPASSWORD_VERSION=5
         ```
 
     * example.go
@@ -173,7 +173,7 @@ Secretly provides two options for specifying secret versions other than the __ve
         type Secrets struct {
             DatabaseUsername string `type:"yaml" name:"My-DB-Credentials" key:"username" split_words:"true"`
 
-            DatabasePassword string `type:"yaml" name:"My-DB-Credentials" key:"password" split_words:"true"`
+            DatabasePassword string `type:"yaml" name:"My-DB-Credentials" key:"password"`
         }
 
         func example(client secretly.Client) Secrets {
