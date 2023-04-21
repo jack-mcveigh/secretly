@@ -135,7 +135,7 @@ func NewField(fValue reflect.Value, fStructField reflect.StructField) (Field, er
 			return Field{}, StructTagError{
 				Name: fStructField.Name,
 				Key:  TagKey,
-				Err:  ErrSecretTypeDoesNotSupportTagKey,
+				Err:  ErrSecretTypeDoesNotSupportKey,
 			}
 		}
 	}

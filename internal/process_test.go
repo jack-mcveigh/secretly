@@ -79,8 +79,8 @@ func TestParsingTextWithKeyNameSpecification(t *testing.T) {
 	spec := TextWithKeyNameSpecification{}
 	_, err := Process(&spec)
 	if err != nil {
-		if !errors.Is(err, ErrSecretTypeDoesNotSupportTagKey) {
-			t.Errorf("Incorrect error. Want %v, got %v", ErrSecretTypeDoesNotSupportTagKey, err)
+		if !errors.Is(err, ErrSecretTypeDoesNotSupportKey) {
+			t.Errorf("Incorrect error. Want %v, got %v", ErrSecretTypeDoesNotSupportKey, err)
 		}
 	}
 }

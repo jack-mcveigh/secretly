@@ -35,15 +35,15 @@ func newTestingSpecificationFields() []internal.Field {
 		},
 		{
 			SecretType:    "yaml",
-			SecretName:    "Yaml_Secret",
+			SecretName:    "YamlSecret",
 			SecretVersion: "latest",
 			MapKeyName:    "Key",
-			SplitWords:    true,
+			SplitWords:    false,
 		},
 	}
 }
 
-func TestSetVersionsFromConfig(t *testing.T) {
+func TestApplyConfig(t *testing.T) {
 	tests := []struct {
 		name          string
 		unmarshalFunc unmarshalFunc
@@ -52,9 +52,9 @@ func TestSetVersionsFromConfig(t *testing.T) {
 		wantErr       bool
 	}{
 		{
-			name:          "Valid JSON",
+			name:          "Only Versions JSON",
 			unmarshalFunc: json.Unmarshal,
-			content:       validJsonBytes,
+			content:       onlyVersionsJsonBytes,
 			want: []internal.Field{
 				{
 					SecretType:    internal.DefaultType,
@@ -72,9 +72,38 @@ func TestSetVersionsFromConfig(t *testing.T) {
 				},
 				{
 					SecretType:    "yaml",
-					SecretName:    "Yaml_Secret",
+					SecretName:    "YamlSecret",
 					SecretVersion: "latest",
 					MapKeyName:    "Key",
+					SplitWords:    false,
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name:          "All Fields JSON",
+			unmarshalFunc: json.Unmarshal,
+			content:       allFieldsJsonBytes,
+			want: []internal.Field{
+				{
+					SecretType:    internal.DefaultType,
+					SecretName:    "Text_Secret_Overwritten",
+					SecretVersion: "1",
+					MapKeyName:    "",
+					SplitWords:    true,
+				},
+				{
+					SecretType:    "json",
+					SecretName:    "Json_Secret_Overwritten",
+					SecretVersion: "latest",
+					MapKeyName:    "Key_Overwritten",
+					SplitWords:    true,
+				},
+				{
+					SecretType:    "yaml",
+					SecretName:    "YamlSecret_Overwritten",
+					SecretVersion: "latest",
+					MapKeyName:    "Key_Overwritten",
 					SplitWords:    true,
 				},
 			},
@@ -88,9 +117,9 @@ func TestSetVersionsFromConfig(t *testing.T) {
 			wantErr:       true,
 		},
 		{
-			name:          "Valid YAML",
+			name:          "Only Versions YAML",
 			unmarshalFunc: yaml.Unmarshal,
-			content:       validYamlBytes,
+			content:       onlyVersionsYamlBytes,
 			want: []internal.Field{
 				{
 					SecretType:    internal.DefaultType,
@@ -108,9 +137,38 @@ func TestSetVersionsFromConfig(t *testing.T) {
 				},
 				{
 					SecretType:    "yaml",
-					SecretName:    "Yaml_Secret",
+					SecretName:    "YamlSecret",
 					SecretVersion: "latest",
 					MapKeyName:    "Key",
+					SplitWords:    false,
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name:          "All Fields Yaml",
+			unmarshalFunc: yaml.Unmarshal,
+			content:       allFieldsYamlBytes,
+			want: []internal.Field{
+				{
+					SecretType:    internal.DefaultType,
+					SecretName:    "Text_Secret_Overwritten",
+					SecretVersion: "1",
+					MapKeyName:    "",
+					SplitWords:    true,
+				},
+				{
+					SecretType:    "json",
+					SecretName:    "Json_Secret_Overwritten",
+					SecretVersion: "latest",
+					MapKeyName:    "Key_Overwritten",
+					SplitWords:    true,
+				},
+				{
+					SecretType:    "yaml",
+					SecretName:    "YamlSecret_Overwritten",
+					SecretVersion: "latest",
+					MapKeyName:    "Key_Overwritten",
 					SplitWords:    true,
 				},
 			},
@@ -128,7 +186,7 @@ func TestSetVersionsFromConfig(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			fields := newTestingSpecificationFields()
-			err := setVersionsFromConfig(tt.unmarshalFunc, tt.content, fields)
+			err := setFieldsWithConfig(tt.unmarshalFunc, tt.content, fields)
 
 			// If the test is set up with an invalid input, we don't care what the error is,
 			// only that there is an error. The same is true for the opposite scenario
@@ -302,7 +360,8 @@ func TestWithVersionsFromEnv(t *testing.T) {
 }
 
 var (
-	validJsonBytes = []byte(`{
+	onlyVersionsJsonBytes = []byte(`
+{
 	"Text_Secret": {
 		"version": "1"
 	},
@@ -312,30 +371,34 @@ var (
 	"YamlSecretKey": {
 		"version": "latest"
 	}
-}`)
-
-	invalidJsonBytes = []byte(`{
-	NOT VALID JSON
-	"Text_Secret": {
-		"version": "1"
-	},
-	"Json_Secret_Key": {
-		"version": "latest"
-	},
-	"YamlSecretKey": {
-		"version": "latest"
-	}
-}`)
-
-	validYamlBytes = []byte(`Text_Secret:
-    version: 1
-Json_Secret_Key:
-    version: latest
-YamlSecretKey:
-    version: latest
+}
 `)
 
-	invalidYamlBytes = []byte(`NOT VALID YAML
+	allFieldsJsonBytes = []byte(`
+{
+	"Text_Secret": {
+		"name": "Text_Secret_Overwritten",
+		"version": "1",
+		"split_words": true
+	},
+	"Json_Secret_Key": {
+		"name": "Json_Secret_Overwritten",
+		"key": "Key_Overwritten",
+		"version": "latest",
+		"split_words": true
+	},
+	"YamlSecretKey": {
+		"name": "YamlSecret_Overwritten",
+		"key": "Key_Overwritten",
+		"version": "latest",
+		"split_words": true
+	}
+}
+`)
+
+	invalidJsonBytes = []byte(`NOT VALID JSON`)
+
+	onlyVersionsYamlBytes = []byte(`
 Text_Secret:
     version: 1
 Json_Secret_Key:
@@ -343,4 +406,23 @@ Json_Secret_Key:
 YamlSecretKey:
     version: latest
 `)
+
+	allFieldsYamlBytes = []byte(`
+Text_Secret:
+    name: Text_Secret_Overwritten
+    version: 1
+    split_words: true
+Json_Secret_Key:
+    name: Json_Secret_Overwritten
+    key: Key_Overwritten
+    version: latest
+    split_words: true
+YamlSecretKey:
+    name: YamlSecret_Overwritten
+    key: Key_Overwritten
+    version: latest
+    split_words: true
+`)
+
+	invalidYamlBytes = []byte(`NOT VALID YAML`)
 )

@@ -46,7 +46,7 @@ func main() {
 	}
 
 	var sc SecretConfig
-	err = client.Process(&sc, secretly.WithVersionsFromConfig(gcpSecretVersionsFilePath))
+	err = client.Process(&sc, secretly.ApplyConfig(gcpSecretVersionsFilePath))
 	if err != nil {
 		log.Fatalf("Failed to process SecretConfig: %v", err)
 	}
