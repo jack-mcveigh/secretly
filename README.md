@@ -109,7 +109,7 @@ type SubSpecification struct {
 
 Secretly provides two options for specifying secret versions other than the __version__ tag:
 
-1. Read secret versions from a config file:
+1. Read secret versions (and all other field values) from a config file:
     * Supported config file types:
         * JSON (ext: .json)
         * YAML (ext: .yaml OR .yml)
@@ -143,7 +143,7 @@ Secretly provides two options for specifying secret versions other than the __ve
         func example(client secretly.Client) Secrets {
             var s Secrets
             
-            err := client.Process(&s, secretly.WithVersionsFromConfig("versions.json"))
+            err := client.Process(&s, secretly.ApplyConfig("versions.json"))
             if err != nil {
                 log.Fatal(err)
             }

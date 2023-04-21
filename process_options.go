@@ -15,18 +15,23 @@ type (
 	unmarshalFunc func([]byte, any) error
 
 	secretConfig struct {
-		Version string `json:"version" yaml:"version"`
+		Type       string `json:"type" yaml:"type"`
+		Name       string `json:"name" yaml:"name"`
+		Key        string `json:"key" yaml:"key"`
+		Version    string `json:"version" yaml:"version"`
+		SplitWords bool   `json:"split_words" yaml:"split_words"`
 	}
 )
 
-// WithVersionsFromConfig returns an internal.ProcessOption which overwrites
-// the specified/default secret versions with versions provided in the file.
+// ApplyConfig returns an internal.ProcessOption which overwrites
+// the specified/default field values with the provided config.
+// Can be used to overwrite any of the configurable field values.
 //
-// Types of version files are determined by their extensions.
-// Accepted version file types are:
+// Types of config files are determined by their extensions.
+// Accepted config file types are:
 //  1. JSON (.json)
 //  2. YAML (.yaml,.yml)
-func WithVersionsFromConfig(filePath string) internal.ProcessOption {
+func ApplyConfig(filePath string) internal.ProcessOption {
 	return func(fields []internal.Field) error {
 		b, err := os.ReadFile(filePath)
 		if err != nil {
@@ -35,9 +40,9 @@ func WithVersionsFromConfig(filePath string) internal.ProcessOption {
 
 		switch ext := filepath.Ext(filePath); ext {
 		case ".json":
-			err = setVersionsFromConfig(json.Unmarshal, b, fields)
+			err = setFieldsWithConfig(json.Unmarshal, b, fields)
 		case ".yaml", ".yml":
-			err = setVersionsFromConfig(yaml.Unmarshal, b, fields)
+			err = setFieldsWithConfig(yaml.Unmarshal, b, fields)
 		default:
 			err = fmt.Errorf("file type \"%s\" not supported", ext)
 		}
@@ -45,9 +50,8 @@ func WithVersionsFromConfig(filePath string) internal.ProcessOption {
 	}
 }
 
-// setVersionsFromConfig retrieves version info for the fields
-// by applying unmarshal to the bytes, b.
-func setVersionsFromConfig(unmarshal unmarshalFunc, b []byte, fields []internal.Field) error {
+// setFieldsWithConfig overwrites fields applying unmarshal to the bytes, b.
+func setFieldsWithConfig(unmarshal unmarshalFunc, b []byte, fields []internal.Field) error {
 	secretConfigMap := make(map[string]secretConfig, len(fields))
 
 	err := unmarshal(b, &secretConfigMap)
@@ -57,7 +61,21 @@ func setVersionsFromConfig(unmarshal unmarshalFunc, b []byte, fields []internal.
 
 	for i, f := range fields {
 		if sc, ok := secretConfigMap[f.Name()]; ok {
-			fields[i].SecretVersion = sc.Version
+			if sc.Type != "" {
+				fields[i].SecretType = sc.Type
+			}
+			if sc.Name != "" {
+				fields[i].SecretName = sc.Name
+			}
+			if sc.Key != "" {
+				fields[i].MapKeyName = sc.Key
+			}
+			if sc.Version != "" {
+				fields[i].SecretVersion = sc.Version
+			}
+			if sc.SplitWords {
+				fields[i].SplitWords = sc.SplitWords
+			}
 		}
 	}
 
