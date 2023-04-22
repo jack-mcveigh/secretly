@@ -17,7 +17,7 @@ func Process(c Client, spec any, opts ...ProcessOption) error {
 	}
 
 	for _, f := range fields {
-		b, err := c.GetSecretVersion(context.TODO(), f.SecretName, f.SecretVersion)
+		b, err := c.GetSecretWithVersion(context.TODO(), f.SecretName, f.SecretVersion)
 		if err != nil {
 			return err
 		}
@@ -64,7 +64,7 @@ func process(spec any, opts ...ProcessOption) ([]Field, error) {
 	return fields, nil
 }
 
-// process recursively processes each the specValue,
+// processSpec recursively processes the specValue,
 // returning a slice of its fields.
 func processSpec(specValue reflect.Value, specType reflect.Type) ([]Field, error) {
 	fields := make([]Field, 0, specValue.NumField())

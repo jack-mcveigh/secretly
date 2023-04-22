@@ -10,7 +10,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type TestingSpecification struct {
+type testingSpecification struct {
 	TextSecret string `split_words:"true"`
 	JsonSecret string `type:"json" key:"Key" split_words:"true"`
 	YamlSecret string `type:"yaml" key:"Key"`
@@ -325,7 +325,7 @@ func TestWithVersionsFromEnv(t *testing.T) {
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
-			spec := TestingSpecification{}
+			spec := testingSpecification{}
 			fields, err := process(&spec, WithVersionsFromEnv(tt.prefix))
 
 			if err != tt.wantErr {

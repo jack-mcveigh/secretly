@@ -20,9 +20,9 @@ type Client interface {
 	// from the secret management service.
 	GetSecret(ctx context.Context, name string) ([]byte, error)
 
-	// GetSecretVersion retrieves the specific secret version for name
+	// GetSecretWithVersion retrieves the specific secret version for name
 	// from the secret management service.
-	GetSecretVersion(ctx context.Context, name, version string) ([]byte, error)
+	GetSecretWithVersion(ctx context.Context, name, version string) ([]byte, error)
 
 	// Close releases resources consumed by the client.
 	Close() error

@@ -64,7 +64,7 @@ func (c *client) GetSecret(ctx context.Context, name string) ([]byte, error) {
 	return b, err
 }
 
-func (c *client) GetSecretVersion(ctx context.Context, name, version string) ([]byte, error) {
+func (c *client) GetSecretWithVersion(ctx context.Context, name, version string) ([]byte, error) {
 	switch version {
 	case "0":
 		version = "latest"

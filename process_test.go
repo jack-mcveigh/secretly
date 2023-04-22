@@ -6,11 +6,12 @@ import (
 	"testing"
 )
 
+// exported to allow testing embedding support
 type CorrectSubSpecification struct {
 	Text string
 }
 
-type CorrectSpecification struct {
+type correctSpecification struct {
 	Text           string
 	TextSplitWords string `split_words:"true"`
 	TextSecretName string `name:"a_secret"`
@@ -54,7 +55,7 @@ type TextWithKeyNameSpecification struct {
 func TestParsingCorrectSpecification(t *testing.T) {
 	want := correctSpecificationFields
 
-	spec := CorrectSpecification{ignored: "testing", ignoredComposedSpecification: CorrectSubSpecification{}}
+	spec := correctSpecification{ignored: "testing", ignoredComposedSpecification: CorrectSubSpecification{}}
 	got, err := process(&spec)
 	if err != nil {
 		t.Errorf("Incorrect error. Want %v, got %v", nil, err)
@@ -86,7 +87,7 @@ func TestParsingTextWithKeyNameSpecification(t *testing.T) {
 }
 
 func TestParsingNonPointerSpecification(t *testing.T) {
-	spec := CorrectSpecification{}
+	spec := correctSpecification{}
 
 	_, err := process(spec)
 	if err != nil {

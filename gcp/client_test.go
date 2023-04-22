@@ -118,7 +118,7 @@ func TestGetSecretVersion(t *testing.T) {
 			smc := newStubClientWithSecrets()
 			c := client{client: smc, projectID: testProjectId, secretCache: secretly.NewSecretCache()}
 
-			got, err := c.GetSecretVersion(context.Background(), tt.secretInfo.name, tt.secretInfo.version)
+			got, err := c.GetSecretWithVersion(context.Background(), tt.secretInfo.name, tt.secretInfo.version)
 
 			if err != tt.wantErr {
 				if !errors.Is(err, tt.wantErr) {
@@ -168,7 +168,7 @@ func TestGetSecretVersionCaching(t *testing.T) {
 
 			var err error
 			for _, secretInfo := range tt.secretInfos {
-				_, err = c.GetSecretVersion(context.Background(), secretInfo.name, secretInfo.version)
+				_, err = c.GetSecretWithVersion(context.Background(), secretInfo.name, secretInfo.version)
 			}
 
 			if err != tt.wantErr {
