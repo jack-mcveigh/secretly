@@ -55,7 +55,7 @@ func TestParsingCorrectSpecification(t *testing.T) {
 	want := correctSpecificationFields
 
 	spec := CorrectSpecification{ignored: "testing", ignoredComposedSpecification: CorrectSubSpecification{}}
-	got, err := Process(&spec)
+	got, err := process(&spec)
 	if err != nil {
 		t.Errorf("Incorrect error. Want %v, got %v", nil, err)
 	}
@@ -77,7 +77,7 @@ func TestParsingCorrectSpecification(t *testing.T) {
 
 func TestParsingTextWithKeyNameSpecification(t *testing.T) {
 	spec := TextWithKeyNameSpecification{}
-	_, err := Process(&spec)
+	_, err := process(&spec)
 	if err != nil {
 		if !errors.Is(err, ErrSecretTypeDoesNotSupportKey) {
 			t.Errorf("Incorrect error. Want %v, got %v", ErrSecretTypeDoesNotSupportKey, err)
@@ -88,7 +88,7 @@ func TestParsingTextWithKeyNameSpecification(t *testing.T) {
 func TestParsingNonPointerSpecification(t *testing.T) {
 	spec := CorrectSpecification{}
 
-	_, err := Process(spec)
+	_, err := process(spec)
 	if err != nil {
 		if !errors.Is(err, ErrInvalidSpecification) {
 			t.Errorf("Incorrect error. Want %v, got %v", ErrInvalidSpecification, err)

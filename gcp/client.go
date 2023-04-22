@@ -55,23 +55,7 @@ func NewClient(ctx context.Context, projectID string, opts ...option.ClientOptio
 }
 
 func (c *client) Process(spec any, opts ...secretly.ProcessOption) error {
-	fields, err := secretly.Process(spec, opts...)
-	if err != nil {
-		return err
-	}
-
-	for _, f := range fields {
-		b, err := c.GetSecretVersion(context.TODO(), f.SecretName, f.SecretVersion)
-		if err != nil {
-			return err
-		}
-
-		err = f.Set(b)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+	return secretly.Process(c, spec, opts...)
 }
 
 func (c *client) GetSecret(ctx context.Context, name string) ([]byte, error) {

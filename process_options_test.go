@@ -326,7 +326,7 @@ func TestWithVersionsFromEnv(t *testing.T) {
 
 		t.Run(tt.name, func(t *testing.T) {
 			spec := TestingSpecification{}
-			fields, err := Process(&spec, WithVersionsFromEnv(tt.prefix))
+			fields, err := process(&spec, WithVersionsFromEnv(tt.prefix))
 
 			if err != tt.wantErr {
 				if !errors.Is(err, tt.wantErr) {
