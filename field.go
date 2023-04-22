@@ -13,14 +13,17 @@ import (
 
 // Default values for optional field tags
 const (
-	DefaultType    = "text"
-	DefaultVersion = "0"
-	TagIgnored     = "ignored"
-	TagKey         = "key"
-	TagName        = "name"
-	TagSplitWords  = "split_words"
-	TagType        = "type"
-	TagVersion     = "version"
+	// defaults
+	defaultType    = "text"
+	defaultVersion = "0"
+
+	// tags
+	tagIgnored    = "ignored"
+	tagKey        = "key"
+	tagName       = "name"
+	tagSplitWords = "split_words"
+	tagType       = "type"
+	tagVersion    = "version"
 )
 
 type Field struct {
@@ -59,11 +62,11 @@ func NewField(fValue reflect.Value, fStructField reflect.StructField) (Field, er
 	newField.Value = fValue
 
 	// Get the split_words value, setting it to false if not explicitly set
-	newField.SplitWords, ok, err = parseOptionalStructTagKey[bool](fStructField, TagSplitWords)
+	newField.SplitWords, ok, err = parseOptionalStructTagKey[bool](fStructField, tagSplitWords)
 	if err != nil {
 		return Field{}, StructTagError{
 			Name: fStructField.Name,
-			Key:  TagSplitWords,
+			Key:  tagSplitWords,
 			Err:  err,
 		}
 	}
@@ -73,34 +76,34 @@ func NewField(fValue reflect.Value, fStructField reflect.StructField) (Field, er
 
 	// Get the type value, setting it to the default, "text", if not explicitly set.
 	// Also perform validation to ensure only valid types are provided
-	newField.SecretType, ok, err = parseOptionalStructTagKey[string](fStructField, TagType)
+	newField.SecretType, ok, err = parseOptionalStructTagKey[string](fStructField, tagType)
 	if err != nil {
 		return Field{}, StructTagError{
 			Name: fStructField.Name,
-			Key:  TagType,
+			Key:  tagType,
 			Err:  err,
 		}
 	}
 	if !ok {
-		newField.SecretType = DefaultType
+		newField.SecretType = defaultType
 	}
 	switch newField.SecretType {
 	case "text", "json", "yaml":
 	default:
 		return Field{}, StructTagError{
 			Name: fStructField.Name,
-			Key:  TagType,
+			Key:  tagType,
 			Err:  ErrInvalidSecretType,
 		}
 	}
 
 	// Get the name value, setting it to the field's name if not explicitly set.
 	// Split the words if the default value was used and split_words was set to true
-	newField.SecretName, ok, err = parseOptionalStructTagKey[string](fStructField, TagName)
+	newField.SecretName, ok, err = parseOptionalStructTagKey[string](fStructField, tagName)
 	if err != nil {
 		return Field{}, StructTagError{
 			Name: fStructField.Name,
-			Key:  TagName,
+			Key:  tagName,
 			Err:  err,
 		}
 	}
@@ -116,11 +119,11 @@ func NewField(fValue reflect.Value, fStructField reflect.StructField) (Field, er
 	// split_words was set to true
 	switch newField.SecretType {
 	case "json", "yaml":
-		newField.MapKeyName, ok, err = parseOptionalStructTagKey[string](fStructField, TagKey)
+		newField.MapKeyName, ok, err = parseOptionalStructTagKey[string](fStructField, tagKey)
 		if err != nil {
 			return Field{}, StructTagError{
 				Name: fStructField.Name,
-				Key:  TagKey,
+				Key:  tagKey,
 				Err:  err,
 			}
 		}
@@ -131,10 +134,10 @@ func NewField(fValue reflect.Value, fStructField reflect.StructField) (Field, er
 			}
 		}
 	default:
-		if _, ok = fStructField.Tag.Lookup(TagKey); ok {
+		if _, ok = fStructField.Tag.Lookup(tagKey); ok {
 			return Field{}, StructTagError{
 				Name: fStructField.Name,
-				Key:  TagKey,
+				Key:  tagKey,
 				Err:  ErrSecretTypeDoesNotSupportKey,
 			}
 		}
@@ -142,16 +145,16 @@ func NewField(fValue reflect.Value, fStructField reflect.StructField) (Field, er
 
 	// Get the version value, setting it to the default, "default", if not explicitly
 	// set. Split the words if the default value was used and split_words was set to true
-	newField.SecretVersion, ok, err = parseOptionalStructTagKey[string](fStructField, TagVersion)
+	newField.SecretVersion, ok, err = parseOptionalStructTagKey[string](fStructField, tagVersion)
 	if err != nil {
 		return Field{}, StructTagError{
 			Name: fStructField.Name,
-			Key:  TagVersion,
+			Key:  tagVersion,
 			Err:  err,
 		}
 	}
 	if !ok {
-		newField.SecretVersion = DefaultVersion
+		newField.SecretVersion = defaultVersion
 	}
 
 	return newField, nil
@@ -319,5 +322,5 @@ func parseOptionalStructTagKey[T any](sf reflect.StructField, key string) (T, bo
 
 // splitWords converts the camelCase/PascalCase string, s, to snake_case
 func splitWords(s string) string {
-	return RegexMatchCapitals.ReplaceAllString(s, "${1}_${2}")
+	return regexMatchCapitals.ReplaceAllString(s, "${1}_${2}")
 }

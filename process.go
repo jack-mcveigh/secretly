@@ -7,7 +7,7 @@ import (
 
 type ProcessOption func([]Field) error
 
-var RegexMatchCapitals = regexp.MustCompile("([a-z0-9])([A-Z])")
+var regexMatchCapitals = regexp.MustCompile("([a-z0-9])([A-Z])")
 
 // Process interprets the provided specification,
 // returning a slice of fields referencing the specification's fields.
@@ -51,11 +51,11 @@ func process(specValue reflect.Value, specType reflect.Type) ([]Field, error) {
 		f, fStructField := specValue.Field(i), specType.Field(i)
 
 		// Get the ignored value, setting it to false if not explicitly set
-		ignored, _, err := parseOptionalStructTagKey[bool](fStructField, TagIgnored)
+		ignored, _, err := parseOptionalStructTagKey[bool](fStructField, tagIgnored)
 		if err != nil {
 			return nil, StructTagError{
 				Name: fStructField.Name,
-				Key:  TagIgnored,
+				Key:  tagIgnored,
 				Err:  err,
 			}
 		}

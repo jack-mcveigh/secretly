@@ -19,7 +19,7 @@ type TestingSpecification struct {
 func newTestingSpecificationFields() []Field {
 	return []Field{
 		{
-			SecretType:    DefaultType,
+			SecretType:    defaultType,
 			SecretName:    "Text_Secret",
 			SecretVersion: "latest",
 			MapKeyName:    "",
@@ -56,7 +56,7 @@ func TestApplyConfig(t *testing.T) {
 			content:       onlyVersionsJsonBytes,
 			want: []Field{
 				{
-					SecretType:    DefaultType,
+					SecretType:    defaultType,
 					SecretName:    "Text_Secret",
 					SecretVersion: "1",
 					MapKeyName:    "",
@@ -85,7 +85,7 @@ func TestApplyConfig(t *testing.T) {
 			content:       allFieldsJsonBytes,
 			want: []Field{
 				{
-					SecretType:    DefaultType,
+					SecretType:    defaultType,
 					SecretName:    "Text_Secret_Overwritten",
 					SecretVersion: "1",
 					MapKeyName:    "",
@@ -121,7 +121,7 @@ func TestApplyConfig(t *testing.T) {
 			content:       onlyVersionsYamlBytes,
 			want: []Field{
 				{
-					SecretType:    DefaultType,
+					SecretType:    defaultType,
 					SecretName:    "Text_Secret",
 					SecretVersion: "1",
 					MapKeyName:    "",
@@ -150,7 +150,7 @@ func TestApplyConfig(t *testing.T) {
 			content:       allFieldsYamlBytes,
 			want: []Field{
 				{
-					SecretType:    DefaultType,
+					SecretType:    defaultType,
 					SecretName:    "Text_Secret_Overwritten",
 					SecretVersion: "1",
 					MapKeyName:    "",
@@ -229,7 +229,7 @@ func TestWithVersionsFromEnv(t *testing.T) {
 			},
 			want: []Field{
 				{
-					SecretType:    DefaultType,
+					SecretType:    defaultType,
 					SecretName:    "Text_Secret",
 					SecretVersion: "1",
 					MapKeyName:    "",
@@ -261,7 +261,7 @@ func TestWithVersionsFromEnv(t *testing.T) {
 			},
 			want: []Field{
 				{
-					SecretType:    DefaultType,
+					SecretType:    defaultType,
 					SecretName:    "Text_Secret",
 					SecretVersion: "0",
 					MapKeyName:    "",
@@ -290,7 +290,7 @@ func TestWithVersionsFromEnv(t *testing.T) {
 			envVarMap: map[string]string{},
 			want: []Field{
 				{
-					SecretType:    DefaultType,
+					SecretType:    defaultType,
 					SecretName:    "Text_Secret",
 					SecretVersion: "0",
 					MapKeyName:    "",
