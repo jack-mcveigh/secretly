@@ -56,7 +56,7 @@ func NewClient(ctx context.Context, projectID string, opts ...option.ClientOptio
 }
 
 func (c *client) Process(spec any, opts ...internal.ProcessOption) error {
-	fields, err := internal.Process(spec)
+	fields, err := internal.Process(spec, opts...)
 	if err != nil {
 		return err
 	}
