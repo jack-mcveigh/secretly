@@ -7,7 +7,6 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/jack-mcveigh/secretly/internal"
 	"gopkg.in/yaml.v3"
 )
 
@@ -17,10 +16,10 @@ type TestingSpecification struct {
 	YamlSecret string `type:"yaml" key:"Key"`
 }
 
-func newTestingSpecificationFields() []internal.Field {
-	return []internal.Field{
+func newTestingSpecificationFields() []Field {
+	return []Field{
 		{
-			SecretType:    internal.DefaultType,
+			SecretType:    DefaultType,
 			SecretName:    "Text_Secret",
 			SecretVersion: "latest",
 			MapKeyName:    "",
@@ -48,16 +47,16 @@ func TestApplyConfig(t *testing.T) {
 		name          string
 		unmarshalFunc unmarshalFunc
 		content       []byte
-		want          []internal.Field
+		want          []Field
 		wantErr       bool
 	}{
 		{
 			name:          "Only Versions JSON",
 			unmarshalFunc: json.Unmarshal,
 			content:       onlyVersionsJsonBytes,
-			want: []internal.Field{
+			want: []Field{
 				{
-					SecretType:    internal.DefaultType,
+					SecretType:    DefaultType,
 					SecretName:    "Text_Secret",
 					SecretVersion: "1",
 					MapKeyName:    "",
@@ -84,9 +83,9 @@ func TestApplyConfig(t *testing.T) {
 			name:          "All Fields JSON",
 			unmarshalFunc: json.Unmarshal,
 			content:       allFieldsJsonBytes,
-			want: []internal.Field{
+			want: []Field{
 				{
-					SecretType:    internal.DefaultType,
+					SecretType:    DefaultType,
 					SecretName:    "Text_Secret_Overwritten",
 					SecretVersion: "1",
 					MapKeyName:    "",
@@ -120,9 +119,9 @@ func TestApplyConfig(t *testing.T) {
 			name:          "Only Versions YAML",
 			unmarshalFunc: yaml.Unmarshal,
 			content:       onlyVersionsYamlBytes,
-			want: []internal.Field{
+			want: []Field{
 				{
-					SecretType:    internal.DefaultType,
+					SecretType:    DefaultType,
 					SecretName:    "Text_Secret",
 					SecretVersion: "1",
 					MapKeyName:    "",
@@ -149,9 +148,9 @@ func TestApplyConfig(t *testing.T) {
 			name:          "All Fields Yaml",
 			unmarshalFunc: yaml.Unmarshal,
 			content:       allFieldsYamlBytes,
-			want: []internal.Field{
+			want: []Field{
 				{
-					SecretType:    internal.DefaultType,
+					SecretType:    DefaultType,
 					SecretName:    "Text_Secret_Overwritten",
 					SecretVersion: "1",
 					MapKeyName:    "",
@@ -217,7 +216,7 @@ func TestWithVersionsFromEnv(t *testing.T) {
 		name      string
 		prefix    string
 		envVarMap map[string]string
-		want      []internal.Field
+		want      []Field
 		wantErr   error
 	}{
 		{
@@ -228,9 +227,9 @@ func TestWithVersionsFromEnv(t *testing.T) {
 				"TEST_JSON_SECRET_KEY_VERSION": "latest",
 				"TEST_YAMLSECRETKEY_VERSION":   "latest",
 			},
-			want: []internal.Field{
+			want: []Field{
 				{
-					SecretType:    internal.DefaultType,
+					SecretType:    DefaultType,
 					SecretName:    "Text_Secret",
 					SecretVersion: "1",
 					MapKeyName:    "",
@@ -260,9 +259,9 @@ func TestWithVersionsFromEnv(t *testing.T) {
 				"TEST_JSON_SECRET_KEY_VERSION": "latest",
 				"TEST_YAMLSECRETKEY_VERSION":   "latest",
 			},
-			want: []internal.Field{
+			want: []Field{
 				{
-					SecretType:    internal.DefaultType,
+					SecretType:    DefaultType,
 					SecretName:    "Text_Secret",
 					SecretVersion: "0",
 					MapKeyName:    "",
@@ -289,9 +288,9 @@ func TestWithVersionsFromEnv(t *testing.T) {
 			name:      "All Env Vars Missing",
 			prefix:    "TEST",
 			envVarMap: map[string]string{},
-			want: []internal.Field{
+			want: []Field{
 				{
-					SecretType:    internal.DefaultType,
+					SecretType:    DefaultType,
 					SecretName:    "Text_Secret",
 					SecretVersion: "0",
 					MapKeyName:    "",
@@ -327,7 +326,7 @@ func TestWithVersionsFromEnv(t *testing.T) {
 
 		t.Run(tt.name, func(t *testing.T) {
 			spec := TestingSpecification{}
-			fields, err := internal.Process(&spec, WithVersionsFromEnv(tt.prefix))
+			fields, err := Process(&spec, WithVersionsFromEnv(tt.prefix))
 
 			if err != tt.wantErr {
 				if !errors.Is(err, tt.wantErr) {

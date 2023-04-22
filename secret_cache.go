@@ -1,4 +1,4 @@
-package internal
+package secretly
 
 // secretCacheEntry is a map of versions to the secret content
 type secretCacheEntry map[string][]byte

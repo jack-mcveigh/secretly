@@ -7,16 +7,14 @@ package secretly
 
 import (
 	"context"
-
-	"github.com/jack-mcveigh/secretly/internal"
 )
 
 type Client interface {
 	// Process resolves the provided specification.
-	// internal.ProcessOptions can be provided
+	// ProcessOptions can be provided
 	// to add additional processing for the fields,
 	// like reading version info from the env or a file.
-	Process(spec any, opts ...internal.ProcessOption) error
+	Process(spec any, opts ...ProcessOption) error
 
 	// GetSecret retrieves the latest secret version for name
 	// from the secret management service.

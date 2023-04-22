@@ -9,7 +9,6 @@ import (
 	"cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
 	"github.com/googleapis/gax-go/v2"
 	"github.com/jack-mcveigh/secretly"
-	"github.com/jack-mcveigh/secretly/internal"
 	"google.golang.org/api/option"
 )
 
@@ -32,7 +31,7 @@ type client struct {
 
 	// secretCache is the cache that stores secrets => versions => content
 	// to reduce secret manager accesses.
-	secretCache internal.SecretCache
+	secretCache secretly.SecretCache
 }
 
 // Compile time check to assert that client implements secretly.Client
@@ -50,13 +49,13 @@ func NewClient(ctx context.Context, projectID string, opts ...option.ClientOptio
 	c := &client{
 		client:      smc,
 		projectID:   projectID,
-		secretCache: internal.NewSecretCache(),
+		secretCache: secretly.NewSecretCache(),
 	}
 	return c, nil
 }
 
-func (c *client) Process(spec any, opts ...internal.ProcessOption) error {
-	fields, err := internal.Process(spec, opts...)
+func (c *client) Process(spec any, opts ...secretly.ProcessOption) error {
+	fields, err := secretly.Process(spec, opts...)
 	if err != nil {
 		return err
 	}
@@ -89,7 +88,7 @@ func (c *client) GetSecretVersion(ctx context.Context, name, version string) ([]
 	default:
 		_, err := strconv.ParseUint(version, 10, 0)
 		if err != nil {
-			return nil, internal.ErrInvalidSecretVersion
+			return nil, secretly.ErrInvalidSecretVersion
 		}
 	}
 
