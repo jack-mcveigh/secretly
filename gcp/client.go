@@ -54,16 +54,28 @@ func NewClient(ctx context.Context, projectID string, opts ...option.ClientOptio
 	return c, nil
 }
 
+// Process resolves the provided specification
+// using GCP Secret Manager.
+// ProcessOptions can be provided
+// to add additional processing for the fields,
+// like reading version info from the env or a file.
+//
+// (*Client).Process is a convenience
+// for calling secretly.Process with the Client.
 func (c *Client) Process(spec any, opts ...secretly.ProcessOption) error {
 	return secretly.Process(c, spec, opts...)
 }
 
+// GetSecret retrieves the latest secret version for name
+// from GCP Secret Manager.
 func (c *Client) GetSecret(ctx context.Context, name string) ([]byte, error) {
 	b, err := c.getSecretVersion(ctx, name, "latest")
 	c.secretCache.Add(name, "latest", b)
 	return b, err
 }
 
+// GetSecretWithVersion retrieves the specific secret version for name
+// from GCP Secret Manager.
 func (c *Client) GetSecretWithVersion(ctx context.Context, name, version string) ([]byte, error) {
 	switch version {
 	case "0":
@@ -103,6 +115,7 @@ func (c *Client) getSecretVersion(ctx context.Context, name, version string) ([]
 	return resp.GetPayload().GetData(), nil
 }
 
+// Close releases resources consumed by the client.
 func (c *Client) Close() error {
 	return c.client.Close()
 }
