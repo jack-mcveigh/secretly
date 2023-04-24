@@ -20,9 +20,9 @@ type gcpsmc interface {
 	Close() error
 }
 
-// client is the GCP Secret Manager client wrapper.
+// Client is the GCP Secret Manager Client wrapper.
 // Implements secretly.Client
-type client struct {
+type Client struct {
 	// client is the GCP Secret Manager client.
 	client gcpsmc
 
@@ -35,18 +35,18 @@ type client struct {
 }
 
 // Compile time check to assert that client implements secretly.Client
-var _ secretly.Client = (*client)(nil)
+var _ secretly.Client = (*Client)(nil)
 
 // NewClient returns a GCP client wrapper
 // configured for projectID, with opts applied.
 // Will error if authentication with the secret manager fails.
-func NewClient(ctx context.Context, projectID string, opts ...option.ClientOption) (*client, error) {
+func NewClient(ctx context.Context, projectID string, opts ...option.ClientOption) (*Client, error) {
 	smc, err := secretmanager.NewClient(context.TODO(), opts...)
 	if err != nil {
 		return nil, err
 	}
 
-	c := &client{
+	c := &Client{
 		client:      smc,
 		projectID:   projectID,
 		secretCache: secretly.NewSecretCache(),
@@ -54,17 +54,17 @@ func NewClient(ctx context.Context, projectID string, opts ...option.ClientOptio
 	return c, nil
 }
 
-func (c *client) Process(spec any, opts ...secretly.ProcessOption) error {
+func (c *Client) Process(spec any, opts ...secretly.ProcessOption) error {
 	return secretly.Process(c, spec, opts...)
 }
 
-func (c *client) GetSecret(ctx context.Context, name string) ([]byte, error) {
+func (c *Client) GetSecret(ctx context.Context, name string) ([]byte, error) {
 	b, err := c.getSecretVersion(ctx, name, "latest")
 	c.secretCache.Add(name, "latest", b)
 	return b, err
 }
 
-func (c *client) GetSecretWithVersion(ctx context.Context, name, version string) ([]byte, error) {
+func (c *Client) GetSecretWithVersion(ctx context.Context, name, version string) ([]byte, error) {
 	switch version {
 	case "0":
 		version = "latest"
@@ -91,7 +91,7 @@ func (c *client) GetSecretWithVersion(ctx context.Context, name, version string)
 }
 
 // getSecret retrieves the a specific version of the secret from the GCP Secret Manager.
-func (c *client) getSecretVersion(ctx context.Context, name, version string) ([]byte, error) {
+func (c *Client) getSecretVersion(ctx context.Context, name, version string) ([]byte, error) {
 	req := &secretmanagerpb.AccessSecretVersionRequest{
 		Name: fmt.Sprintf(secretVersionsFormat, c.projectID, name, version),
 	}
@@ -103,6 +103,6 @@ func (c *client) getSecretVersion(ctx context.Context, name, version string) ([]
 	return resp.GetPayload().GetData(), nil
 }
 
-func (c *client) Close() error {
+func (c *Client) Close() error {
 	return c.client.Close()
 }

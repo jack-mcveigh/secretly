@@ -116,7 +116,7 @@ func TestGetSecretVersion(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			smc := newStubClientWithSecrets()
-			c := client{client: smc, projectID: testProjectId, secretCache: secretly.NewSecretCache()}
+			c := Client{client: smc, projectID: testProjectId, secretCache: secretly.NewSecretCache()}
 
 			got, err := c.GetSecretWithVersion(context.Background(), tt.secretInfo.name, tt.secretInfo.version)
 
@@ -160,7 +160,7 @@ func TestGetSecretVersionCaching(t *testing.T) {
 			smc := newStubClientWithSecrets()
 			smc.failIfAccessedMoreThanOnce = true
 
-			c := client{
+			c := Client{
 				client:      smc,
 				projectID:   testProjectId,
 				secretCache: secretly.NewSecretCache(),
