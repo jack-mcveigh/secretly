@@ -38,20 +38,6 @@ type Field struct {
 // NewField constructs a field referencing the provided reflect.Value with the tags from
 // the reflect.StructField applied
 func NewField(fValue reflect.Value, fStructField reflect.StructField) (Field, error) {
-	// reduce pointer to value/struct pointer. Initialize underlying struct if needed
-	// TODO: maybe remove struct handling, might not be needed for this implementation
-	for fValue.Kind() == reflect.Ptr {
-		if fValue.IsNil() {
-			if fValue.Type().Elem().Kind() != reflect.Struct {
-				// value other than struct
-				break
-			}
-			// value is a struct, initialize it
-			fValue.Set(reflect.New(fValue.Type().Elem()))
-		}
-		fValue = fValue.Elem()
-	}
-
 	var (
 		newField Field
 		ok       bool
