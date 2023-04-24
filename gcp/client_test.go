@@ -9,7 +9,7 @@ import (
 
 	"cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
 	"github.com/googleapis/gax-go/v2"
-	"github.com/jack-mcveigh/secretly/internal"
+	"github.com/jack-mcveigh/secretly"
 )
 
 const testProjectId = "test-project"
@@ -116,9 +116,9 @@ func TestGetSecretVersion(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			smc := newStubClientWithSecrets()
-			c := client{client: smc, projectID: testProjectId, secretCache: internal.NewSecretCache()}
+			c := Client{client: smc, projectID: testProjectId, secretCache: secretly.NewSecretCache()}
 
-			got, err := c.GetSecretVersion(context.Background(), tt.secretInfo.name, tt.secretInfo.version)
+			got, err := c.GetSecretWithVersion(context.Background(), tt.secretInfo.name, tt.secretInfo.version)
 
 			if err != tt.wantErr {
 				if !errors.Is(err, tt.wantErr) {
@@ -160,15 +160,15 @@ func TestGetSecretVersionCaching(t *testing.T) {
 			smc := newStubClientWithSecrets()
 			smc.failIfAccessedMoreThanOnce = true
 
-			c := client{
+			c := Client{
 				client:      smc,
 				projectID:   testProjectId,
-				secretCache: internal.NewSecretCache(),
+				secretCache: secretly.NewSecretCache(),
 			}
 
 			var err error
 			for _, secretInfo := range tt.secretInfos {
-				_, err = c.GetSecretVersion(context.Background(), secretInfo.name, secretInfo.version)
+				_, err = c.GetSecretWithVersion(context.Background(), secretInfo.name, secretInfo.version)
 			}
 
 			if err != tt.wantErr {

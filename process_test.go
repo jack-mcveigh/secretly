@@ -1,4 +1,4 @@
-package internal
+package secretly
 
 import (
 	"errors"
@@ -6,11 +6,12 @@ import (
 	"testing"
 )
 
+// exported to allow testing embedding support
 type CorrectSubSpecification struct {
 	Text string
 }
 
-type CorrectSpecification struct {
+type correctSpecification struct {
 	Text           string
 	TextSplitWords string `split_words:"true"`
 	TextSecretName string `name:"a_secret"`
@@ -54,8 +55,8 @@ type TextWithKeyNameSpecification struct {
 func TestParsingCorrectSpecification(t *testing.T) {
 	want := correctSpecificationFields
 
-	spec := CorrectSpecification{ignored: "testing", ignoredComposedSpecification: CorrectSubSpecification{}}
-	got, err := Process(&spec)
+	spec := correctSpecification{ignored: "testing", ignoredComposedSpecification: CorrectSubSpecification{}}
+	got, err := process(&spec)
 	if err != nil {
 		t.Errorf("Incorrect error. Want %v, got %v", nil, err)
 	}
@@ -77,7 +78,7 @@ func TestParsingCorrectSpecification(t *testing.T) {
 
 func TestParsingTextWithKeyNameSpecification(t *testing.T) {
 	spec := TextWithKeyNameSpecification{}
-	_, err := Process(&spec)
+	_, err := process(&spec)
 	if err != nil {
 		if !errors.Is(err, ErrSecretTypeDoesNotSupportKey) {
 			t.Errorf("Incorrect error. Want %v, got %v", ErrSecretTypeDoesNotSupportKey, err)
@@ -86,9 +87,9 @@ func TestParsingTextWithKeyNameSpecification(t *testing.T) {
 }
 
 func TestParsingNonPointerSpecification(t *testing.T) {
-	spec := CorrectSpecification{}
+	spec := correctSpecification{}
 
-	_, err := Process(spec)
+	_, err := process(spec)
 	if err != nil {
 		if !errors.Is(err, ErrInvalidSpecification) {
 			t.Errorf("Incorrect error. Want %v, got %v", ErrInvalidSpecification, err)
@@ -99,35 +100,35 @@ func TestParsingNonPointerSpecification(t *testing.T) {
 var correctSpecificationFields = []Field{
 	// text
 	{
-		SecretType:    DefaultType,
+		SecretType:    defaultType,
 		SecretName:    "Text",
-		SecretVersion: DefaultVersion,
+		SecretVersion: defaultVersion,
 		MapKeyName:    "",
 		SplitWords:    false,
 	},
 	{
-		SecretType:    DefaultType,
+		SecretType:    defaultType,
 		SecretName:    "Text_Split_Words",
-		SecretVersion: DefaultVersion,
+		SecretVersion: defaultVersion,
 		MapKeyName:    "",
 		SplitWords:    true,
 	},
 	{
-		SecretType:    DefaultType,
+		SecretType:    defaultType,
 		SecretName:    "a_secret",
-		SecretVersion: DefaultVersion,
+		SecretVersion: defaultVersion,
 		MapKeyName:    "",
 		SplitWords:    false,
 	},
 	{
-		SecretType:    DefaultType,
+		SecretType:    defaultType,
 		SecretName:    "TextVersion",
 		SecretVersion: "latest",
 		MapKeyName:    "",
 		SplitWords:    false,
 	},
 	{
-		SecretType:    DefaultType,
+		SecretType:    defaultType,
 		SecretName:    "a_secret",
 		SecretVersion: "latest",
 		MapKeyName:    "",
@@ -137,28 +138,28 @@ var correctSpecificationFields = []Field{
 	{
 		SecretType:    "json",
 		SecretName:    "Json",
-		SecretVersion: DefaultVersion,
+		SecretVersion: defaultVersion,
 		MapKeyName:    "Json",
 		SplitWords:    false,
 	},
 	{
 		SecretType:    "json",
 		SecretName:    "Json_Split_Words",
-		SecretVersion: DefaultVersion,
+		SecretVersion: defaultVersion,
 		MapKeyName:    "Json_Split_Words",
 		SplitWords:    true,
 	},
 	{
 		SecretType:    "json",
 		SecretName:    "a_secret",
-		SecretVersion: DefaultVersion,
+		SecretVersion: defaultVersion,
 		MapKeyName:    "JsonSecretName",
 		SplitWords:    false,
 	},
 	{
 		SecretType:    "json",
 		SecretName:    "JsonKeyName",
-		SecretVersion: DefaultVersion,
+		SecretVersion: defaultVersion,
 		MapKeyName:    "a_key",
 		SplitWords:    false,
 	},
@@ -180,28 +181,28 @@ var correctSpecificationFields = []Field{
 	{
 		SecretType:    "yaml",
 		SecretName:    "Yaml",
-		SecretVersion: DefaultVersion,
+		SecretVersion: defaultVersion,
 		MapKeyName:    "Yaml",
 		SplitWords:    false,
 	},
 	{
 		SecretType:    "yaml",
 		SecretName:    "Yaml_Split_Words",
-		SecretVersion: DefaultVersion,
+		SecretVersion: defaultVersion,
 		MapKeyName:    "Yaml_Split_Words",
 		SplitWords:    true,
 	},
 	{
 		SecretType:    "yaml",
 		SecretName:    "a_secret",
-		SecretVersion: DefaultVersion,
+		SecretVersion: defaultVersion,
 		MapKeyName:    "YamlSecretName",
 		SplitWords:    false,
 	},
 	{
 		SecretType:    "yaml",
 		SecretName:    "YamlKeyName",
-		SecretVersion: DefaultVersion,
+		SecretVersion: defaultVersion,
 		MapKeyName:    "a_key",
 		SplitWords:    false,
 	},

@@ -1,13 +1,34 @@
-package internal
+package secretly
 
 import (
+	"context"
 	"reflect"
 	"regexp"
 )
 
 type ProcessOption func([]Field) error
 
-var RegexMatchCapitals = regexp.MustCompile("([a-z0-9])([A-Z])")
+var regexMatchCapitals = regexp.MustCompile("([a-z0-9])([A-Z])")
+
+func Process(c Client, spec any, opts ...ProcessOption) error {
+	fields, err := process(spec, opts...)
+	if err != nil {
+		return err
+	}
+
+	for _, f := range fields {
+		b, err := c.GetSecretWithVersion(context.TODO(), f.SecretName, f.SecretVersion)
+		if err != nil {
+			return err
+		}
+
+		err = f.Set(b)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
 // Process interprets the provided specification,
 // returning a slice of fields referencing the specification's fields.
@@ -16,7 +37,7 @@ var RegexMatchCapitals = regexp.MustCompile("([a-z0-9])([A-Z])")
 //
 // spec must be a pointer to a struct,
 // otherwise [ErrInvalidSpecification] is returned.
-func Process(spec any, opts ...ProcessOption) ([]Field, error) {
+func process(spec any, opts ...ProcessOption) ([]Field, error) {
 	// ensure spec is a struct pointer
 	specValue := reflect.ValueOf(spec)
 	if specValue.Kind() != reflect.Ptr {
@@ -28,7 +49,7 @@ func Process(spec any, opts ...ProcessOption) ([]Field, error) {
 	}
 
 	specType := specValue.Type()
-	fields, err := process(specValue, specType)
+	fields, err := processSpec(specValue, specType)
 	if err != nil {
 		return nil, err
 	}
@@ -43,19 +64,19 @@ func Process(spec any, opts ...ProcessOption) ([]Field, error) {
 	return fields, nil
 }
 
-// process recursively processes each the specValue,
+// processSpec recursively processes the specValue,
 // returning a slice of its fields.
-func process(specValue reflect.Value, specType reflect.Type) ([]Field, error) {
+func processSpec(specValue reflect.Value, specType reflect.Type) ([]Field, error) {
 	fields := make([]Field, 0, specValue.NumField())
 	for i := 0; i < specValue.NumField(); i++ {
 		f, fStructField := specValue.Field(i), specType.Field(i)
 
 		// Get the ignored value, setting it to false if not explicitly set
-		ignored, _, err := parseOptionalStructTagKey[bool](fStructField, TagIgnored)
+		ignored, _, err := parseOptionalStructTagKey[bool](fStructField, tagIgnored)
 		if err != nil {
 			return nil, StructTagError{
 				Name: fStructField.Name,
-				Key:  TagIgnored,
+				Key:  tagIgnored,
 				Err:  err,
 			}
 		}
@@ -68,7 +89,7 @@ func process(specValue reflect.Value, specType reflect.Type) ([]Field, error) {
 		case reflect.Interface | reflect.Array | reflect.Slice | reflect.Map:
 			// ignore these types
 		case reflect.Struct:
-			fs, err := process(f, fStructField.Type)
+			fs, err := processSpec(f, fStructField.Type)
 			if err != nil {
 				return nil, err
 			}

@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/jack-mcveigh/secretly/internal"
 	"gopkg.in/yaml.v3"
 )
 
@@ -23,7 +22,7 @@ type (
 	}
 )
 
-// ApplyConfig returns an internal.ProcessOption which overwrites
+// ApplyConfig returns an ProcessOption which overwrites
 // the specified/default field values with the provided config.
 // Can be used to overwrite any of the configurable field values.
 //
@@ -31,8 +30,8 @@ type (
 // Accepted config file types are:
 //  1. JSON (.json)
 //  2. YAML (.yaml,.yml)
-func ApplyConfig(filePath string) internal.ProcessOption {
-	return func(fields []internal.Field) error {
+func ApplyConfig(filePath string) ProcessOption {
+	return func(fields []Field) error {
 		b, err := os.ReadFile(filePath)
 		if err != nil {
 			return err
@@ -51,7 +50,7 @@ func ApplyConfig(filePath string) internal.ProcessOption {
 }
 
 // setFieldsWithConfig overwrites fields applying unmarshal to the bytes, b.
-func setFieldsWithConfig(unmarshal unmarshalFunc, b []byte, fields []internal.Field) error {
+func setFieldsWithConfig(unmarshal unmarshalFunc, b []byte, fields []Field) error {
 	secretConfigMap := make(map[string]secretConfig, len(fields))
 
 	err := unmarshal(b, &secretConfigMap)
@@ -82,7 +81,7 @@ func setFieldsWithConfig(unmarshal unmarshalFunc, b []byte, fields []internal.Fi
 	return nil
 }
 
-// WithVersionsFromEnv returns an internal.ProcessOption which overwrites
+// WithVersionsFromEnv returns an ProcessOption which overwrites
 // the specified/default secret versions with versions from the environment.
 // Environment variables are to be named with the following logic:
 //
@@ -90,8 +89,8 @@ func setFieldsWithConfig(unmarshal unmarshalFunc, b []byte, fields []internal.Fi
 //		uppercase( prefix + "_" + field.Name() ) + "_VERSION"
 //	else
 //		uppercase( field.Name() ) + "_VERSION"
-func WithVersionsFromEnv(prefix string) internal.ProcessOption {
-	return func(fields []internal.Field) error {
+func WithVersionsFromEnv(prefix string) ProcessOption {
+	return func(fields []Field) error {
 		if prefix != "" {
 			prefix += "_"
 		}

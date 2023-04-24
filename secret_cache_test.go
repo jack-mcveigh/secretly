@@ -1,9 +1,15 @@
-package internal
+package secretly
 
 import (
 	"reflect"
 	"testing"
 )
+
+type secretInfo struct {
+	name    string
+	version string
+	content []byte
+}
 
 func newSecretCacheWithEntries() SecretCache {
 	sc := NewSecretCache()
@@ -13,12 +19,6 @@ func newSecretCacheWithEntries() SecretCache {
 		"latest": []byte("key1: latest: secret content"),
 	}
 	return sc
-}
-
-type secretInfo struct {
-	name    string
-	version string
-	content []byte
 }
 
 func TestSecretCacheAdd(t *testing.T) {
