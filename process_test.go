@@ -38,7 +38,11 @@ type correctSpecification struct {
 	// It only modifies the default name and key, the struct field name.
 	YamlAll string `type:"yaml" name:"a_secret" key:"a_key" version:"latest" split_words:"true"`
 
+	Pointer *string
+
 	ComposedSpecification CorrectSubSpecification
+
+	ComposedSpecificationPtr *CorrectSubSpecification
 
 	CorrectSubSpecification // test embedding
 
@@ -56,7 +60,7 @@ func TestParsingCorrectSpecification(t *testing.T) {
 	want := correctSpecificationFields
 
 	spec := correctSpecification{ignored: "testing", ignoredComposedSpecification: CorrectSubSpecification{}}
-	got, err := process(&spec)
+	got, err := processSpec(&spec)
 	if err != nil {
 		t.Errorf("Incorrect error. Want %v, got %v", nil, err)
 	}
@@ -78,7 +82,7 @@ func TestParsingCorrectSpecification(t *testing.T) {
 
 func TestParsingTextWithKeyNameSpecification(t *testing.T) {
 	spec := TextWithKeyNameSpecification{}
-	_, err := process(&spec)
+	_, err := processSpec(&spec)
 	if err != nil {
 		if !errors.Is(err, ErrSecretTypeDoesNotSupportKey) {
 			t.Errorf("Incorrect error. Want %v, got %v", ErrSecretTypeDoesNotSupportKey, err)
@@ -89,7 +93,7 @@ func TestParsingTextWithKeyNameSpecification(t *testing.T) {
 func TestParsingNonPointerSpecification(t *testing.T) {
 	spec := correctSpecification{}
 
-	_, err := process(spec)
+	_, err := processSpec(spec)
 	if err != nil {
 		if !errors.Is(err, ErrInvalidSpecification) {
 			t.Errorf("Incorrect error. Want %v, got %v", ErrInvalidSpecification, err)
@@ -219,6 +223,20 @@ var correctSpecificationFields = []Field{
 		SecretVersion: "latest",
 		MapKeyName:    "a_key",
 		SplitWords:    true,
+	},
+	{
+		SecretType:    "text",
+		SecretName:    "Pointer",
+		SecretVersion: "0",
+		MapKeyName:    "",
+		SplitWords:    false,
+	},
+	{
+		SecretType:    "text",
+		SecretName:    "Text",
+		SecretVersion: "0",
+		MapKeyName:    "",
+		SplitWords:    false,
 	},
 	{
 		SecretType:    "text",
