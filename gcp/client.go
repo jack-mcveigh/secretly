@@ -69,6 +69,9 @@ func (c *Client) Process(spec any, opts ...secretly.ProcessOption) error {
 // GetSecret retrieves the latest secret version for name
 // from GCP Secret Manager.
 func (c *Client) GetSecret(ctx context.Context, name string) ([]byte, error) {
+	if b, hit := c.secretCache.Get(name, "latest"); hit {
+		return b, nil
+	}
 	b, err := c.getSecretVersion(ctx, name, "latest")
 	c.secretCache.Add(name, "latest", b)
 	return b, err
@@ -78,9 +81,8 @@ func (c *Client) GetSecret(ctx context.Context, name string) ([]byte, error) {
 // from GCP Secret Manager.
 func (c *Client) GetSecretWithVersion(ctx context.Context, name, version string) ([]byte, error) {
 	switch version {
-	case "0":
-		version = "latest"
-	case "latest":
+	case "0", "latest":
+		return c.GetSecret(ctx, name)
 	default:
 		_, err := strconv.ParseUint(version, 10, 0)
 		if err != nil {
@@ -98,7 +100,6 @@ func (c *Client) GetSecretWithVersion(ctx context.Context, name, version string)
 	}
 
 	c.secretCache.Add(name, version, b)
-
 	return b, nil
 }
 
