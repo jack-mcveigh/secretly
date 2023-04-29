@@ -10,10 +10,12 @@ import (
 	"github.com/jack-mcveigh/secretly"
 )
 
-var (
-	AWSCURRENT  = "AWSCURRENT"
-	AWSPREVIOUS = "AWSPREVIOUS"
-	AWSPENDING  = "AWSPENDING"
+// AWS Staging Labels are used to access secret versions by an alias,
+// retrieving versions such as the latest version.
+const (
+	AWSCURRENT  = "AWSCURRENT"  // latest
+	AWSPREVIOUS = "AWSPREVIOUS" // latest - 1
+	AWSPENDING  = "AWSPENDING"  // Temporary while secret is being rotated
 )
 
 // awssmc describes required AWS Secrets Manager client methods
@@ -21,10 +23,15 @@ type awssmc interface {
 	GetSecretValueWithContext(ctx aws.Context, input *secretsmanager.GetSecretValueInput, opts ...request.Option) (*secretsmanager.GetSecretValueOutput, error)
 }
 
+// Client is the AWS Secrets Manager Client wrapper.
+// Implements secretly.Client
 type Client struct {
 	client      awssmc
 	secretCache secretly.SecretCache
 }
+
+// Compile time check to assert that client implements secretly.Client
+var _ secretly.Client = (*Client)(nil)
 
 func NewClient(p client.ConfigProvider, cfgs ...*aws.Config) (*Client, error) {
 	smc := secretsmanager.New(p, cfgs...)
@@ -62,7 +69,7 @@ func (c *Client) getSecretWithStagingLabel(ctx context.Context, name, label stri
 	}
 	b, err := c.getSecretVersion(ctx, &secretsmanager.GetSecretValueInput{
 		SecretId:     &name,
-		VersionStage: &label,
+		VersionStage: aws.String(label),
 	})
 	c.secretCache.Add(name, label, b)
 	return b, err
@@ -70,13 +77,19 @@ func (c *Client) getSecretWithStagingLabel(ctx context.Context, name, label stri
 
 // GetSecretWithVersion retrieves the specific secret version for name
 // from AWS Secrets Manager.
-func (c *Client) GetSecretWithVersion(ctx context.Context, name, version string) ([]byte, error) {
-	switch version {
+//
+// Note: The version provided can be either a version id or
+// one of the default version staging labels,
+// [AWSCURRENT], [AWSPREVIOUS], or [AWSPENDING].
+func (c *Client) GetSecretWithVersion(ctx context.Context, name, versionOrVersionStage string) ([]byte, error) {
+	switch versionStage := versionOrVersionStage; versionStage {
 	case "0", AWSCURRENT:
 		return c.GetSecret(ctx, name)
 	case AWSPENDING, AWSPREVIOUS:
-		return c.getSecretWithStagingLabel(ctx, name, version)
+		return c.getSecretWithStagingLabel(ctx, name, versionStage)
 	}
+
+	version := versionOrVersionStage
 
 	if b, hit := c.secretCache.Get(name, version); hit {
 		return b, nil
