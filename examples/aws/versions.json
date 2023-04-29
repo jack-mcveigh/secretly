@@ -1,0 +1,11 @@
+{
+    "Service_Integration_Token": {
+        "version": "EXAMPLE1-90ab-cdef-fedc-ba987SECRET1"
+    },
+    "My-Database-Credentials_Username": {
+        "version": "AWSPREVIOUS"
+    },
+    "My-Database-Credentials_Password": {
+        "version": "EXAMPLE3-90ab-cdef-fedc-ba987SECRET3"
+    }
+}
