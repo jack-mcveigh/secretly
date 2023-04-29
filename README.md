@@ -9,9 +9,10 @@ ___Secretly___ was created to allow Go applications to easily interface with pop
 
 Below is a list of the currently supported secret management services:
 
-* [Google Cloud Platform's Secret Manager](https://cloud.google.com/secret-manager)
+* [Google Cloud Platform's (GCP) Secret Manager](https://cloud.google.com/secret-manager)
+* [Amazon Web Services' (AWS) Secrets Manager](https://aws.amazon.com/secrets-manager/)
 
-If there's a secret management service missing that you'd like to see, create a Feature Request!
+If there's a secret management service missing that you'd like to see included, create a [Feature Request](https://github.com/jack-mcveigh/secretly/issues/new)!
 
 ## Usage
 
