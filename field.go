@@ -14,8 +14,8 @@ import (
 // Default values for optional field tags
 const (
 	// defaults
-	defaultType    = "text"
-	defaultVersion = "0"
+	DefaultType    = "text"
+	DefaultVersion = "0"
 
 	// tags
 	tagIgnored    = "ignored"
@@ -71,7 +71,7 @@ func NewField(fValue reflect.Value, fStructField reflect.StructField) (Field, er
 		}
 	}
 	if !ok {
-		newField.SecretType = defaultType
+		newField.SecretType = DefaultType
 	}
 	switch newField.SecretType {
 	case "text", "json", "yaml":
@@ -140,7 +140,7 @@ func NewField(fValue reflect.Value, fStructField reflect.StructField) (Field, er
 		}
 	}
 	if !ok {
-		newField.SecretVersion = defaultVersion
+		newField.SecretVersion = DefaultVersion
 	}
 
 	return newField, nil

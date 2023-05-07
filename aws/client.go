@@ -26,14 +26,18 @@ type awssmc interface {
 // Client is the AWS Secrets Manager Client wrapper.
 // Implements secretly.Client
 type Client struct {
-	client      awssmc
+	// client is the AWS Secrets Manager client.
+	client awssmc
+
+	// secretCache is the cache that stores secrets => versions => content
+	// to reduce secret manager accesses.
 	secretCache secretly.SecretCache
 }
 
 // Compile time check to assert that client implements secretly.Client
 var _ secretly.Client = (*Client)(nil)
 
-// NewClient returns an AWS AWS Secrets Manager client wrapper
+// NewClient returns an AWS Secrets Manager client wrapper
 // with the configs applied.
 // Will error if authentication with the secrets manager fails.
 func NewClient(p client.ConfigProvider, cfgs ...*aws.Config) *Client {
@@ -46,7 +50,7 @@ func NewClient(p client.ConfigProvider, cfgs ...*aws.Config) *Client {
 	return c
 }
 
-// NewClient wraps the AWS Secrets Manager client.
+// Wrap wraps the AWS Secrets Manager client.
 func Wrap(client *secretsmanager.SecretsManager) *Client {
 	c := &Client{
 		client:      client,
@@ -95,7 +99,7 @@ func (c *Client) getSecretWithStagingLabel(ctx context.Context, name, label stri
 // [AWSCURRENT], [AWSPREVIOUS], or [AWSPENDING].
 func (c *Client) GetSecretWithVersion(ctx context.Context, name, versionOrVersionStage string) ([]byte, error) {
 	switch versionStage := versionOrVersionStage; versionStage {
-	case "0", AWSCURRENT:
+	case secretly.DefaultVersion, AWSCURRENT:
 		return c.GetSecret(ctx, name)
 	case AWSPENDING, AWSPREVIOUS:
 		return c.getSecretWithStagingLabel(ctx, name, versionStage)
