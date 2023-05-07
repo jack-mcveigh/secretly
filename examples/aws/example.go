@@ -39,13 +39,14 @@ type SecretConfig struct {
 func main() {
 	s := session.Must(session.NewSession())
 
-	client, err := secretlyaws.NewClient(s)
-	if err != nil {
-		log.Fatalf("Failed to initialize aws secret manager client: %v", err)
-	}
+	client := secretlyaws.NewClient(s)
+
+	// Or initialize by wrapping your own AWS Secrets Manager client.
+	//
+	// client := secretlyaws.Wrap(secretsmanager.New(s))
 
 	var sc SecretConfig
-	err = client.Process(&sc, secretly.ApplyConfig(awsSecretVersionsFilePath))
+	err := client.Process(&sc, secretly.ApplyConfig(awsSecretVersionsFilePath))
 	if err != nil {
 		log.Fatalf("Failed to process SecretConfig: %v", err)
 	}

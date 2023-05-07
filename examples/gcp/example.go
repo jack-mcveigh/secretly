@@ -45,6 +45,14 @@ func main() {
 		log.Fatalf("Failed to initialize gcp secret manager client: %v", err)
 	}
 
+	// Or initialize by wrapping your own GCP Secret Manager client.
+	//
+	// smc, err := secretmanager.NewClient(context.Background())
+	// if err != nil {
+	// 	log.Fatalf("Failed to initialize gcp secret manager client: %v", err)
+	// }
+	// client := secretlygcp.Wrap(smc, gcpProjectId)
+
 	var sc SecretConfig
 	err = client.Process(&sc, secretly.ApplyConfig(gcpSecretVersionsFilePath))
 	if err != nil {
