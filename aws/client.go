@@ -36,14 +36,14 @@ var _ secretly.Client = (*Client)(nil)
 // NewClient returns an AWS AWS Secrets Manager client wrapper
 // with the configs applied.
 // Will error if authentication with the secrets manager fails.
-func NewClient(p client.ConfigProvider, cfgs ...*aws.Config) (*Client, error) {
+func NewClient(p client.ConfigProvider, cfgs ...*aws.Config) *Client {
 	smc := secretsmanager.New(p, cfgs...)
 
 	c := &Client{
 		client:      smc,
 		secretCache: secretly.NewSecretCache(),
 	}
-	return c, nil
+	return c
 }
 
 // NewClient wraps the AWS Secrets Manager client.
