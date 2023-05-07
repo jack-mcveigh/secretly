@@ -38,7 +38,7 @@ type Client struct {
 var _ secretly.Client = (*Client)(nil)
 
 // NewClient returns a GCP client wrapper
-// configured for projectID, with opts applied.
+// with the options applied.
 // Will error if authentication with the secret manager fails.
 func NewClient(ctx context.Context, projectID string, opts ...option.ClientOption) (*Client, error) {
 	smc, err := secretmanager.NewClient(ctx, opts...)
@@ -52,6 +52,16 @@ func NewClient(ctx context.Context, projectID string, opts ...option.ClientOptio
 		secretCache: secretly.NewSecretCache(),
 	}
 	return c, nil
+}
+
+// NewClient wraps the GCP client.
+func Wrap(client *secretmanager.Client, projectID string) *Client {
+	c := &Client{
+		client:      client,
+		projectID:   projectID,
+		secretCache: secretly.NewSecretCache(),
+	}
+	return c
 }
 
 // Process resolves the provided specification

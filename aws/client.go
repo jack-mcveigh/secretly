@@ -33,6 +33,9 @@ type Client struct {
 // Compile time check to assert that client implements secretly.Client
 var _ secretly.Client = (*Client)(nil)
 
+// NewClient returns an AWS AWS Secrets Manager client wrapper
+// with the configs applied.
+// Will error if authentication with the secrets manager fails.
 func NewClient(p client.ConfigProvider, cfgs ...*aws.Config) (*Client, error) {
 	smc := secretsmanager.New(p, cfgs...)
 
@@ -43,8 +46,17 @@ func NewClient(p client.ConfigProvider, cfgs ...*aws.Config) (*Client, error) {
 	return c, nil
 }
 
+// NewClient wraps the AWS Secrets Manager client.
+func Wrap(client *secretsmanager.SecretsManager) *Client {
+	c := &Client{
+		client:      client,
+		secretCache: secretly.NewSecretCache(),
+	}
+	return c
+}
+
 // Process resolves the provided specification
-// using GCP Secret Manager.
+// using AWS Secrets Manager.
 // ProcessOptions can be provided
 // to add additional processing for the fields,
 // like reading version info from the env or a file.
