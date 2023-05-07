@@ -41,7 +41,7 @@ var _ secretly.Client = (*Client)(nil)
 // configured for projectID, with opts applied.
 // Will error if authentication with the secret manager fails.
 func NewClient(ctx context.Context, projectID string, opts ...option.ClientOption) (*Client, error) {
-	smc, err := secretmanager.NewClient(context.TODO(), opts...)
+	smc, err := secretmanager.NewClient(ctx, opts...)
 	if err != nil {
 		return nil, err
 	}

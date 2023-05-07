@@ -20,7 +20,7 @@ func Process(c Client, spec any, opts ...ProcessOption) error {
 	}
 
 	for _, f := range fields {
-		b, err := c.GetSecretWithVersion(context.TODO(), f.SecretName, f.SecretVersion)
+		b, err := c.GetSecretWithVersion(context.Background(), f.SecretName, f.SecretVersion)
 		if err != nil {
 			return err
 		}
