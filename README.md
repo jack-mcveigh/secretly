@@ -11,6 +11,9 @@ Below is a list of the currently supported secret management services:
 
 * [Google Cloud Platform's (GCP) Secret Manager](https://cloud.google.com/secret-manager)
 * [Amazon Web Services' (AWS) Secrets Manager](https://aws.amazon.com/secrets-manager/)
+* [Vault KV Secrets Engine](https://developer.hashicorp.com/vault/docs/secrets/kv)
+  * [KV Secrets Engine - Version 1](https://developer.hashicorp.com/vault/docs/secrets/kv/kv-v1)
+  * [KV Secrets Engine - Version 2](https://developer.hashicorp.com/vault/docs/secrets/kv/kv-v2)
 
 If there's a secret management service missing that you'd like to see included, create a [Feature Request](https://github.com/jack-mcveigh/secretly/issues/new)!
 
