@@ -71,12 +71,6 @@ func (c *stubClient) GetSecretValueWithContext(ctx context.Context, input *secre
 	return nil, errSecretNotFound
 }
 
-func (c *stubClient) Close() error { return nil }
-
-func TestProcess(t *testing.T) {
-
-}
-
 func TestGetSecretVersion(t *testing.T) {
 	tests := []struct {
 		name       string

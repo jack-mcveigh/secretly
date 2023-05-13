@@ -64,10 +64,6 @@ func (c *stubClient) AccessSecretVersion(ctx context.Context, req *secretmanager
 
 func (c *stubClient) Close() error { return nil }
 
-func TestProcess(t *testing.T) {
-
-}
-
 func TestGetSecretVersion(t *testing.T) {
 	tests := []struct {
 		name       string
