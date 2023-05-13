@@ -1,24 +1,25 @@
-package aws
+package vault
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"reflect"
+	"strconv"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/request"
-	"github.com/aws/aws-sdk-go/service/secretsmanager"
+	vault "github.com/hashicorp/vault/api"
 	"github.com/jack-mcveigh/secretly"
 )
 
-const secretKeyFormat = "%s_%s"
+const secretKeyFormat = "%s_%d"
 
 var (
 	errSecretNotFound             = errors.New("secret not found")
 	errSecretAccessedMoreThanOnce = errors.New("secret accessed more than once")
 
-	testSecretContent = []byte("secret content")
+	testSecretContent = []byte(`{"field1":"key1","field2":"key2"}`)
 )
 
 type secretInfo struct {
@@ -26,52 +27,58 @@ type secretInfo struct {
 	version string
 }
 
-type stubClient struct {
+type stubKVv1Client struct {
 	secrets map[string][]byte
 
 	accessed                   bool
 	failIfAccessedMoreThanOnce bool
 }
 
-func newStubClientWithSecrets() *stubClient {
+func newStubKVv1ClientWithSecrets() *stubKVv1Client {
 
-	c := &stubClient{
+	c := &stubKVv1Client{
 		secrets: make(map[string][]byte),
 	}
 
-	c.secrets[fmt.Sprintf(secretKeyFormat, "fake-secret", AWSCURRENT)] = testSecretContent
-	c.secrets[fmt.Sprintf(secretKeyFormat, "fake-secret", "1")] = testSecretContent
+	c.secrets[fmt.Sprintf(secretKeyFormat, "fake-secret", 0)] = testSecretContent
 
 	return c
 }
 
-func (c *stubClient) GetSecretValueWithContext(ctx context.Context, input *secretsmanager.GetSecretValueInput, opts ...request.Option) (*secretsmanager.GetSecretValueOutput, error) {
+func (c *stubKVv1Client) Get(ctx context.Context, secretPath string) (*vault.KVSecret, error) {
+	return c.GetVersion(ctx, secretPath, 0)
+}
+
+func (c *stubKVv1Client) GetVersion(ctx context.Context, secretPath string, version int) (*vault.KVSecret, error) {
 	if c.failIfAccessedMoreThanOnce && c.accessed {
 		return nil, errSecretAccessedMoreThanOnce
 	}
 	c.accessed = true
 
-	var version string
-	if input.VersionStage != nil {
-		version = *input.VersionStage
-	} else {
-		version = *input.VersionId
+	if strconv.Itoa(version) != secretly.DefaultVersion {
+		return nil, ErrSpecificVersionPassedToKVv1
 	}
 
-	key := fmt.Sprintf(secretKeyFormat, *input.SecretId, version)
-	fmt.Println(key)
+	// At this point, version == int(secretly.DefaultVersion)
+	key := fmt.Sprintf(secretKeyFormat, secretPath, version)
 
 	if b, ok := c.secrets[key]; ok {
-		v := string(b)
-		resp := &secretsmanager.GetSecretValueOutput{
-			SecretString: &v,
+		// In vault, the most basic secret content is a map.
+		var secret map[string]interface{}
+		err := json.Unmarshal(b, &secret)
+		if err != nil {
+			return nil, err
+		}
+
+		resp := &vault.KVSecret{
+			Data: secret,
 		}
 		return resp, nil
 	}
 	return nil, errSecretNotFound
 }
 
-func TestGetSecretVersion(t *testing.T) {
+func TestKVv1GetSecretVersion(t *testing.T) {
 	tests := []struct {
 		name       string
 		secretInfo secretInfo
@@ -88,22 +95,22 @@ func TestGetSecretVersion(t *testing.T) {
 			wantErr: nil,
 		},
 		{
-			name: "Success With Numbered Version",
+			name: "Success With Latest Version",
 			secretInfo: secretInfo{
 				name:    "fake-secret",
-				version: "1",
+				version: "0",
 			},
 			want:    testSecretContent,
 			wantErr: nil,
 		},
 		{
-			name: "Success With Latest Version",
+			name: "Non-Default Secret Version",
 			secretInfo: secretInfo{
 				name:    "fake-secret",
-				version: AWSCURRENT,
+				version: "1",
 			},
-			want:    testSecretContent,
-			wantErr: nil,
+			want:    nil,
+			wantErr: ErrSpecificVersionPassedToKVv1,
 		},
 		{
 			name: "Secret Does Not Exist",
@@ -118,8 +125,8 @@ func TestGetSecretVersion(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			smc := newStubClientWithSecrets()
-			c := Client{client: smc, secretCache: secretly.NewSecretCache()}
+			smc := newStubKVv1ClientWithSecrets()
+			c := KVv1Client{client: smc, secretCache: secretly.NewSecretCache()}
 
 			got, err := c.GetSecretWithVersion(context.Background(), tt.secretInfo.name, tt.secretInfo.version)
 
@@ -136,7 +143,7 @@ func TestGetSecretVersion(t *testing.T) {
 	}
 }
 
-func TestGetSecretVersionCaching(t *testing.T) {
+func TestKVv1GetSecretVersionCaching(t *testing.T) {
 	tests := []struct {
 		name        string
 		secretInfos []secretInfo
@@ -147,11 +154,11 @@ func TestGetSecretVersionCaching(t *testing.T) {
 			secretInfos: []secretInfo{
 				{
 					name:    "fake-secret",
-					version: AWSCURRENT,
+					version: "0",
 				},
 				{
 					name:    "fake-secret",
-					version: AWSCURRENT,
+					version: "0",
 				},
 			},
 			wantErr: nil,
@@ -160,10 +167,10 @@ func TestGetSecretVersionCaching(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			smc := newStubClientWithSecrets()
+			smc := newStubKVv1ClientWithSecrets()
 			smc.failIfAccessedMoreThanOnce = true
 
-			c := Client{
+			c := KVv1Client{
 				client:      smc,
 				secretCache: secretly.NewSecretCache(),
 			}

@@ -54,7 +54,7 @@ func NewClient(ctx context.Context, projectID string, opts ...option.ClientOptio
 	return c, nil
 }
 
-// NewClient wraps the GCP client.
+// Wrap wraps the GCP client.
 func Wrap(client *secretmanager.Client, projectID string) *Client {
 	c := &Client{
 		client:      client,
@@ -91,7 +91,7 @@ func (c *Client) GetSecret(ctx context.Context, name string) ([]byte, error) {
 // from GCP Secret Manager.
 func (c *Client) GetSecretWithVersion(ctx context.Context, name, version string) ([]byte, error) {
 	switch version {
-	case "0", "latest":
+	case secretly.DefaultVersion, "latest":
 		return c.GetSecret(ctx, name)
 	default:
 		_, err := strconv.ParseUint(version, 10, 0)
