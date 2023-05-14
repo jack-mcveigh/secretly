@@ -1,0 +1,11 @@
+{
+    "Service_Integration_Token": {
+        "version": "1"
+    },
+    "My-Database-Credentials_Username": {
+        "version": "0"
+    },
+    "My-Database-Credentials_Password": {
+        "version": "1"
+    }
+}
