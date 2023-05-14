@@ -12,13 +12,13 @@ const awsSecretVersionsFilePath = "versions.json"
 
 type SecretConfig struct {
 	// The secret stores text data and is named "Service_Integration_Token"
-	// in GCP Secret Manager. Since "split_words" is enabled, version info can be loaded
+	// in AWS Secrets Manager. Since "split_words" is enabled, version info can be loaded
 	// from a config file by including the field name, converted to PascalCase to
 	// Snake_Case, as a key: "Service_Integration_Token".
 	ServiceIntegrationToken string `split_words:"true"`
 
 	// The secret stores a json map and is named "My-Database-Credentials"
-	// in GCP Secret Manager. The field to extract from the json secret is named
+	// in AWS Secrets Manager. The field to extract from the json secret is named
 	// "Username". Version info from a config can be loaded by the config including the
 	// key "My-Database-Credentials_Username". Version info from a config can be loaded
 	// by exporting the variable "My_Database_Credentials_Username". Note, an underscore
@@ -27,7 +27,7 @@ type SecretConfig struct {
 	DatabaseUsername string `type:"json" name:"My-Database-Credentials" key:"Username" split_words:"true"`
 
 	// The secret stores a json map and is named "My-Database-Credentials"
-	// in GCP Secret Manager. The field to extract from the json secret is named
+	// in AWS Secrets Manager. The field to extract from the json secret is named
 	// "Password". Version info from a config can be loaded by the config including the
 	// key "My-Database-Credentials_Password". Version info from a config can be loaded
 	// by exporting the variable "My_Database_Credentials_Password". Note, an underscore
