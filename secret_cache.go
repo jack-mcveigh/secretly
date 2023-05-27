@@ -4,7 +4,11 @@ package secretly
 // which are used to limit calls
 // to the upstream secret manager service.
 type SecretCache interface {
+	// Add adds a secret with its version to the cache.
 	Add(name, version string, content []byte)
+
+	// Get gets the secret version from the cache.
+	// A bool is returned to indicate a cache hit or miss.
 	Get(name, version string) ([]byte, bool)
 }
 
@@ -30,7 +34,6 @@ func NewSecretCache() secretCache {
 	return secretCache{cache: make(map[string]secretCacheEntry)}
 }
 
-// Add adds a secret with its version to the cache.
 func (sc secretCache) Add(name, version string, content []byte) {
 	if sc.cache[name] == nil {
 		sc.cache[name] = make(secretCacheEntry)
@@ -38,8 +41,6 @@ func (sc secretCache) Add(name, version string, content []byte) {
 	sc.cache[name][version] = content
 }
 
-// Get gets the secret version from the cache.
-// A bool is returned to indicate a cache hit or miss.
 func (sc secretCache) Get(name, version string) ([]byte, bool) {
 	if _, ok := sc.cache[name]; !ok {
 		return nil, false

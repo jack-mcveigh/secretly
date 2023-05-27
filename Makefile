@@ -1,4 +1,4 @@
-all: build
+all: build-examples
 
 build-examples:
 	go build -o examples/bin/ ./examples/...
