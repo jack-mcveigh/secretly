@@ -43,7 +43,11 @@ func main() {
 	cfg := vault.DefaultConfig()
 	cfg.Address = vaultAddress
 
-	client, err := secretlyvault.NewKVv1Client(vaultToken, vaultMountPath, cfg)
+	client, err := secretlyvault.NewKVv1Client(secretlyvault.Config{
+		Token:       vaultToken,
+		MountPath:   vaultMountPath,
+		VaultConfig: cfg,
+	})
 	if err != nil {
 		log.Fatalf("Failed to initialize vault KV v1 secret engine client: %v", err)
 	}
@@ -55,7 +59,7 @@ func main() {
 	// 	log.Fatalf("Failed to initialize vault KV V1 secret engine client: %v", err)
 	// }
 	// vc.SetToken(vaultToken)
-	// client := secretlyvault.WrapKVv1(vc.KVv2(vaultMountPath))
+	// client = secretlyvault.WrapKVv1(vc.KVv1(vaultMountPath), secretlyvault.Config{})
 
 	var sc SecretConfig
 	err = client.Process(&sc)

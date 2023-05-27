@@ -23,6 +23,14 @@ type awssmc interface {
 	GetSecretValueWithContext(ctx aws.Context, input *secretsmanager.GetSecretValueInput, opts ...request.Option) (*secretsmanager.GetSecretValueOutput, error)
 }
 
+// Config provides both AWS Secrets Manager client and secretly wrapper configurations.
+type Config struct {
+	// ConfigProvider provides service clients with a client.Config.
+	ConfigProvider client.ConfigProvider
+
+	secretly.Config
+}
+
 // Client is the AWS Secrets Manager Client wrapper.
 // Implements secretly.Client
 type Client struct {
@@ -40,21 +48,35 @@ var _ secretly.Client = (*Client)(nil)
 // NewClient returns an AWS Secrets Manager client wrapper
 // with the configs applied.
 // Will error if authentication with the secrets manager fails.
-func NewClient(p client.ConfigProvider, cfgs ...*aws.Config) *Client {
-	smc := secretsmanager.New(p, cfgs...)
+func NewClient(cfg Config, cfgs ...*aws.Config) *Client {
+	smc := secretsmanager.New(cfg.ConfigProvider, cfgs...)
+
+	var sc secretly.SecretCache
+	if cfg.DisableCaching {
+		sc = secretly.NewNoOpSecretCache()
+	} else {
+		sc = secretly.NewSecretCache()
+	}
 
 	c := &Client{
 		client:      smc,
-		secretCache: secretly.NewSecretCache(),
+		secretCache: sc,
 	}
 	return c
 }
 
 // Wrap wraps the AWS Secrets Manager client.
-func Wrap(client *secretsmanager.SecretsManager) *Client {
+func Wrap(client *secretsmanager.SecretsManager, cfg Config) *Client {
+	var sc secretly.SecretCache
+	if cfg.DisableCaching {
+		sc = secretly.NewNoOpSecretCache()
+	} else {
+		sc = secretly.NewSecretCache()
+	}
+
 	c := &Client{
 		client:      client,
-		secretCache: secretly.NewSecretCache(),
+		secretCache: sc,
 	}
 	return c
 }

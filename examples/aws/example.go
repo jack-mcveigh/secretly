@@ -39,11 +39,13 @@ type SecretConfig struct {
 func main() {
 	s := session.Must(session.NewSession())
 
-	client := secretlyaws.NewClient(s)
+	client := secretlyaws.NewClient(secretlyaws.Config{
+		ConfigProvider: s,
+	})
 
 	// Or initialize by wrapping your own AWS Secrets Manager client.
 	//
-	// client := secretlyaws.Wrap(secretsmanager.New(s))
+	// client := secretlyaws.Wrap(secretsmanager.New(s), secretlyaws.Config{})
 
 	var sc SecretConfig
 	err := client.Process(&sc, secretly.ApplyConfig(awsSecretVersionsFilePath))

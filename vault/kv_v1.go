@@ -36,28 +36,42 @@ type KVv1Client struct {
 var _ secretly.Client = (*KVv1Client)(nil)
 
 // NewKVv1Client returns a Vault KVv1 Secrets Engine wrapper.
-func NewKVv1Client(token, mountPath string, cfg *vault.Config) (*KVv1Client, error) {
-	client, err := vault.NewClient(cfg)
+func NewKVv1Client(cfg Config) (*KVv1Client, error) {
+	client, err := vault.NewClient(cfg.VaultConfig)
 	if err != nil {
 		return nil, err
 	}
 
-	if token != "" {
-		client.SetToken(token)
+	if cfg.Token != "" {
+		client.SetToken(cfg.Token)
+	}
+
+	var sc secretly.SecretCache
+	if cfg.DisableCaching {
+		sc = secretly.NewNoOpSecretCache()
+	} else {
+		sc = secretly.NewSecretCache()
 	}
 
 	c := &KVv1Client{
-		client:      client.KVv1(mountPath),
-		secretCache: secretly.NewSecretCache(),
+		client:      client.KVv1(cfg.MountPath),
+		secretCache: sc,
 	}
 	return c, nil
 }
 
 // WrapKVv2 wraps the Vault KVv1 Secrets Engine client.
-func WrapKVv1(client *vault.KVv1) *KVv1Client {
+func WrapKVv1(client *vault.KVv1, cfg Config) *KVv1Client {
+	var sc secretly.SecretCache
+	if cfg.DisableCaching {
+		sc = secretly.NewNoOpSecretCache()
+	} else {
+		sc = secretly.NewSecretCache()
+	}
+
 	c := &KVv1Client{
 		client:      client,
-		secretCache: secretly.NewSecretCache(),
+		secretCache: sc,
 	}
 	return c
 }

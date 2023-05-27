@@ -40,7 +40,9 @@ type SecretConfig struct {
 }
 
 func main() {
-	client, err := secretlygcp.NewClient(context.Background(), gcpProjectId)
+	client, err := secretlygcp.NewClient(context.Background(), secretlygcp.Config{
+		ProjectId: gcpProjectId,
+	})
 	if err != nil {
 		log.Fatalf("Failed to initialize gcp secret manager client: %v", err)
 	}
@@ -51,7 +53,9 @@ func main() {
 	// if err != nil {
 	// 	log.Fatalf("Failed to initialize gcp secret manager client: %v", err)
 	// }
-	// client := secretlygcp.Wrap(smc, gcpProjectId)
+	// client := secretlygcp.Wrap(smc, secretlygcp.Config{
+	// 	ProjectId: gcpProjectId,
+	// })
 
 	var sc SecretConfig
 	err = client.Process(&sc, secretly.ApplyConfig(gcpSecretVersionsFilePath))
