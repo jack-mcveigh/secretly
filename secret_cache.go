@@ -1,20 +1,37 @@
 package secretly
 
-// secretCacheEntry is a map of versions to the secret content
+// SecretCache describes a secret cache,
+// which are used to limit calls
+// to the upstream secret manager service.
+type SecretCache interface {
+	Add(name, version string, content []byte)
+	Get(name, version string) ([]byte, bool)
+}
+
+type noOpSecretCache struct{}
+
+// NewNoOpSecretCache constructs a no-op secret cache,
+// meant to be used for disabling secret caching.
+func NewNoOpSecretCache() noOpSecretCache { return noOpSecretCache{} }
+
+func (noOpSecretCache) Add(name, version string, content []byte) {}
+func (noOpSecretCache) Get(name, version string) ([]byte, bool)  { return nil, false }
+
+// secretCacheEntry is a map of versions to the secret content.
 type secretCacheEntry map[string][]byte
 
-// SecretCache contains the cache, mapping secrets to a [secretCacheEntry]
-type SecretCache struct {
+// secretCache contains the cache, mapping secrets to a [secretCacheEntry].
+type secretCache struct {
 	cache map[string]secretCacheEntry
 }
 
-// NewSecretCache constructs a SecretCache.
-func NewSecretCache() SecretCache {
-	return SecretCache{cache: make(map[string]secretCacheEntry)}
+// NewSecretCache constructs a secretCache.
+func NewSecretCache() secretCache {
+	return secretCache{cache: make(map[string]secretCacheEntry)}
 }
 
 // Add adds a secret with its version to the cache.
-func (sc SecretCache) Add(name, version string, content []byte) {
+func (sc secretCache) Add(name, version string, content []byte) {
 	if sc.cache[name] == nil {
 		sc.cache[name] = make(secretCacheEntry)
 	}
@@ -23,7 +40,7 @@ func (sc SecretCache) Add(name, version string, content []byte) {
 
 // Get gets the secret version from the cache.
 // A bool is returned to indicate a cache hit or miss.
-func (sc SecretCache) Get(name, version string) ([]byte, bool) {
+func (sc secretCache) Get(name, version string) ([]byte, bool) {
 	if _, ok := sc.cache[name]; !ok {
 		return nil, false
 	}
