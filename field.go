@@ -26,6 +26,9 @@ const (
 	tagVersion    = "version"
 )
 
+// Field represents a field in a struct,
+// exposing its secretly tag values
+// and reference to the underlying value.
 type Field struct {
 	SecretType    string
 	SecretName    string

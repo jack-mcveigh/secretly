@@ -6,8 +6,6 @@ import (
 	"regexp"
 )
 
-type ProcessOption func([]Field) error
-
 var regexMatchCapitals = regexp.MustCompile("([a-z0-9])([A-Z])")
 
 // Process interprets the provided specification,

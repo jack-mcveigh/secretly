@@ -11,6 +11,9 @@ import (
 )
 
 type (
+	// ProcessOptions are optional modifiers for secret processing.
+	ProcessOption func([]Field) error
+
 	unmarshalFunc func([]byte, any) error
 
 	secretConfig struct {
