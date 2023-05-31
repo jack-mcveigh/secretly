@@ -34,7 +34,6 @@ type stubClient struct {
 }
 
 func newStubClientWithSecrets() *stubClient {
-
 	c := &stubClient{
 		secrets: make(map[string][]byte),
 	}
