@@ -185,7 +185,7 @@ func TestApplyConfig(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			fields := newTestingSpecificationFields()
-			err := setFieldsWithConfig(tt.unmarshalFunc, tt.content, fields)
+			err := setFieldsWithPatch(tt.unmarshalFunc, tt.content, fields)
 
 			// If the test is set up with an invalid input, we don't care what the error is,
 			// only that there is an error. The same is true for the opposite scenario

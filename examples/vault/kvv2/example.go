@@ -9,10 +9,10 @@ import (
 )
 
 const (
-	vaultToken                  = "a-fake-token"
-	vaultMountPath              = "a-fake-mount-path"
-	vaultAddress                = "www.google.com"
-	vaultSecretVersionsFilePath = "versions.json"
+	vaultToken             = "a-fake-token"
+	vaultMountPath         = "a-fake-mount-path"
+	vaultAddress           = "www.google.com"
+	secretVersionsFilePath = "versions.json"
 )
 
 type SecretConfig struct {
@@ -64,7 +64,7 @@ func main() {
 	// client := secretlyvault.WrapKVv2(vc.KVv2(vaultMountPath), secretlyvault.Config{})
 
 	var sc SecretConfig
-	err = client.Process(&sc, secretly.ApplyConfig(vaultSecretVersionsFilePath))
+	err = client.Process(&sc, secretly.ApplyPatch(secretVersionsFilePath))
 	if err != nil {
 		log.Fatalf("Failed to process SecretConfig: %v", err)
 	}

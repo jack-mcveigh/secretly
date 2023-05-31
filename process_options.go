@@ -25,15 +25,15 @@ type (
 	}
 )
 
-// ApplyConfig returns an ProcessOption which overwrites
-// the specified/default field values with the provided config.
+// ApplyPatch returns an ProcessOption which overwrites
+// the specified/default field values with the provided patch.
 // Can be used to overwrite any of the configurable field values.
 //
-// Types of config files are determined by their extensions.
-// Accepted config file types are:
+// Types of patch files are determined by their extensions.
+// Accepted patch file types are:
 //  1. JSON (.json)
 //  2. YAML (.yaml,.yml)
-func ApplyConfig(filePath string) ProcessOption {
+func ApplyPatch(filePath string) ProcessOption {
 	return func(fields []Field) error {
 		b, err := os.ReadFile(filePath)
 		if err != nil {
@@ -42,9 +42,9 @@ func ApplyConfig(filePath string) ProcessOption {
 
 		switch ext := filepath.Ext(filePath); ext {
 		case ".json":
-			err = setFieldsWithConfig(json.Unmarshal, b, fields)
+			err = setFieldsWithPatch(json.Unmarshal, b, fields)
 		case ".yaml", ".yml":
-			err = setFieldsWithConfig(yaml.Unmarshal, b, fields)
+			err = setFieldsWithPatch(yaml.Unmarshal, b, fields)
 		default:
 			err = fmt.Errorf("file type \"%s\" not supported", ext)
 		}
@@ -52,8 +52,8 @@ func ApplyConfig(filePath string) ProcessOption {
 	}
 }
 
-// setFieldsWithConfig overwrites fields applying unmarshal to the bytes, b.
-func setFieldsWithConfig(unmarshal unmarshalFunc, b []byte, fields []Field) error {
+// setFieldsWithPatch overwrites fields applying unmarshal to the bytes, b.
+func setFieldsWithPatch(unmarshal unmarshalFunc, b []byte, fields []Field) error {
 	secretConfigMap := make(map[string]secretConfig, len(fields))
 
 	err := unmarshal(b, &secretConfigMap)

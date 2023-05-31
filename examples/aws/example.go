@@ -8,7 +8,7 @@ import (
 	secretlyaws "github.com/jack-mcveigh/secretly/aws"
 )
 
-const awsSecretVersionsFilePath = "versions.json"
+const secretVersionsFilePath = "versions.json"
 
 type SecretConfig struct {
 	// The secret stores text data and is named "Service_Integration_Token"
@@ -48,7 +48,7 @@ func main() {
 	// client := secretlyaws.Wrap(secretsmanager.New(s), secretlyaws.Config{})
 
 	var sc SecretConfig
-	err := client.Process(&sc, secretly.ApplyConfig(awsSecretVersionsFilePath))
+	err := client.Process(&sc, secretly.ApplyPatch(secretVersionsFilePath))
 	if err != nil {
 		log.Fatalf("Failed to process SecretConfig: %v", err)
 	}

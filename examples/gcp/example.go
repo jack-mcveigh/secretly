@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	gcpProjectId              = "project-id-12345"
-	gcpSecretVersionsFilePath = "versions.json"
+	gcpProjectId           = "project-id-12345"
+	secretVersionsFilePath = "versions.json"
 )
 
 type SecretConfig struct {
@@ -58,7 +58,7 @@ func main() {
 	// })
 
 	var sc SecretConfig
-	err = client.Process(&sc, secretly.ApplyConfig(gcpSecretVersionsFilePath))
+	err = client.Process(&sc, secretly.ApplyPatch(secretVersionsFilePath))
 	if err != nil {
 		log.Fatalf("Failed to process SecretConfig: %v", err)
 	}

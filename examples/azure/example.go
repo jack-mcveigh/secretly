@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	azureVaultURI               = "fake.vault.azure.net"
-	azureSecretVersionsFilePath = "versions.json"
+	azureVaultURI          = "fake.vault.azure.net"
+	secretVersionsFilePath = "versions.json"
 )
 
 type SecretConfig struct {
@@ -63,7 +63,7 @@ func main() {
 	// client := secretlyazure.Wrap(azsc, secretlyazure.Config{})
 
 	var sc SecretConfig
-	err = client.Process(&sc, secretly.ApplyConfig(azureSecretVersionsFilePath))
+	err = client.Process(&sc, secretly.ApplyPatch(secretVersionsFilePath))
 	if err != nil {
 		log.Fatalf("Failed to process SecretConfig: %v", err)
 	}
