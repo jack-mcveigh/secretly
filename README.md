@@ -14,7 +14,7 @@ Below is a list of the currently supported secret management services:
 * [Vault KV Secrets Engine](https://developer.hashicorp.com/vault/docs/secrets/kv)
   * [KV Secrets Engine - Version 1](https://developer.hashicorp.com/vault/docs/secrets/kv/kv-v1)
   * [KV Secrets Engine - Version 2](https://developer.hashicorp.com/vault/docs/secrets/kv/kv-v2)
-* [Azure Key Vault](https://azure.microsoft.com/en-us/products/key-vault/)
+* [Microsoft Azure Key Vault](https://azure.microsoft.com/en-us/products/key-vault/)
 
 If there's a secret management service missing that you'd like to see included, create a [Feature Request](https://github.com/jack-mcveigh/secretly/issues/new)!
 
@@ -114,12 +114,12 @@ type SubSpecification struct {
 
 Secretly provides two options for specifying secret versions other than the __version__ tag:
 
-1. Read secret versions (and all other field values) from a config file:
-    * Supported config file types:
+1. Read secret versions (and all other field values) from a patch file:
+    * Supported patch file types:
         * JSON (ext: .json)
         * YAML (ext: .yaml OR .yml)
 
-    _Example of reading secret versions from a JSON config file:_
+    _Example of reading secret versions from a JSON patch file:_
 
     * versions.json
 
@@ -148,7 +148,7 @@ Secretly provides two options for specifying secret versions other than the __ve
         func example(client secretly.Client) Secrets {
             var s Secrets
             
-            err := client.Process(&s, secretly.ApplyConfig("versions.json"))
+            err := client.Process(&s, secretly.ApplyPatch("versions.json"))
             if err != nil {
                 log.Fatal(err)
             }
