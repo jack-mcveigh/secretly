@@ -14,6 +14,7 @@ Below is a list of the currently supported secret management services:
 * [Vault KV Secrets Engine](https://developer.hashicorp.com/vault/docs/secrets/kv)
   * [KV Secrets Engine - Version 1](https://developer.hashicorp.com/vault/docs/secrets/kv/kv-v1)
   * [KV Secrets Engine - Version 2](https://developer.hashicorp.com/vault/docs/secrets/kv/kv-v2)
+* [Azure Key Vault](https://azure.microsoft.com/en-us/products/key-vault/)
 
 If there's a secret management service missing that you'd like to see included, create a [Feature Request](https://github.com/jack-mcveigh/secretly/issues/new)!
 
