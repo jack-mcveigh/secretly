@@ -1,4 +1,4 @@
-package aws
+package azure
 
 import (
 	"context"
@@ -7,8 +7,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/request"
-	"github.com/aws/aws-sdk-go/service/secretsmanager"
+	"github.com/Azure/azure-sdk-for-go/sdk/keyvault/azsecrets"
 	"github.com/jack-mcveigh/secretly"
 )
 
@@ -18,7 +17,7 @@ var (
 	errSecretNotFound             = errors.New("secret not found")
 	errSecretAccessedMoreThanOnce = errors.New("secret accessed more than once")
 
-	testSecretContent = []byte("secret content")
+	testSecretContent = "secret content"
 )
 
 type secretInfo struct {
@@ -27,7 +26,7 @@ type secretInfo struct {
 }
 
 type stubClient struct {
-	secrets map[string][]byte
+	secrets map[string]string
 
 	accessed                   bool
 	failIfAccessedMoreThanOnce bool
@@ -35,40 +34,32 @@ type stubClient struct {
 
 func newStubClientWithSecrets() *stubClient {
 	c := &stubClient{
-		secrets: make(map[string][]byte),
+		secrets: make(map[string]string),
 	}
 
-	c.secrets[fmt.Sprintf(secretKeyFormat, "fake-secret", AWSCURRENT)] = testSecretContent
+	c.secrets[fmt.Sprintf(secretKeyFormat, "fake-secret", "")] = testSecretContent
 	c.secrets[fmt.Sprintf(secretKeyFormat, "fake-secret", "1")] = testSecretContent
 
 	return c
 }
 
-func (c *stubClient) GetSecretValueWithContext(ctx context.Context, input *secretsmanager.GetSecretValueInput, opts ...request.Option) (*secretsmanager.GetSecretValueOutput, error) {
+func (c *stubClient) GetSecret(ctx context.Context, name string, version string, options *azsecrets.GetSecretOptions) (azsecrets.GetSecretResponse, error) {
+	resp := azsecrets.GetSecretResponse{}
 	if c.failIfAccessedMoreThanOnce && c.accessed {
-		return nil, errSecretAccessedMoreThanOnce
+		return resp, errSecretAccessedMoreThanOnce
 	}
 	c.accessed = true
 
-	var version string
-	if input.VersionStage != nil {
-		version = *input.VersionStage
-	} else {
-		version = *input.VersionId
-	}
+	key := fmt.Sprintf(secretKeyFormat, name, version)
 
-	key := fmt.Sprintf(secretKeyFormat, *input.SecretId, version)
-	fmt.Println(key)
-
-	if b, ok := c.secrets[key]; ok {
-		v := string(b)
-		resp := &secretsmanager.GetSecretValueOutput{
-			SecretString: &v,
-		}
+	if s, ok := c.secrets[key]; ok {
+		resp.Value = &s
 		return resp, nil
 	}
-	return nil, errSecretNotFound
+	return resp, errSecretNotFound
 }
+
+func (c *stubClient) Close() error { return nil }
 
 func TestGetSecretVersion(t *testing.T) {
 	tests := []struct {
@@ -81,9 +72,9 @@ func TestGetSecretVersion(t *testing.T) {
 			name: "Success With Default Version",
 			secretInfo: secretInfo{
 				name:    "fake-secret",
-				version: "0",
+				version: "",
 			},
-			want:    testSecretContent,
+			want:    []byte(testSecretContent),
 			wantErr: nil,
 		},
 		{
@@ -92,16 +83,16 @@ func TestGetSecretVersion(t *testing.T) {
 				name:    "fake-secret",
 				version: "1",
 			},
-			want:    testSecretContent,
+			want:    []byte(testSecretContent),
 			wantErr: nil,
 		},
 		{
 			name: "Success With Latest Version",
 			secretInfo: secretInfo{
 				name:    "fake-secret",
-				version: AWSCURRENT,
+				version: "",
 			},
-			want:    testSecretContent,
+			want:    []byte(testSecretContent),
 			wantErr: nil,
 		},
 		{
@@ -117,8 +108,8 @@ func TestGetSecretVersion(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			smc := newStubClientWithSecrets()
-			c := Client{client: smc, secretCache: secretly.NewSecretCache()}
+			azsc := newStubClientWithSecrets()
+			c := Client{client: azsc, secretCache: secretly.NewSecretCache()}
 
 			got, err := c.GetSecretWithVersion(context.Background(), tt.secretInfo.name, tt.secretInfo.version)
 
@@ -146,11 +137,11 @@ func TestGetSecretVersionCaching(t *testing.T) {
 			secretInfos: []secretInfo{
 				{
 					name:    "fake-secret",
-					version: AWSCURRENT,
+					version: "",
 				},
 				{
 					name:    "fake-secret",
-					version: AWSCURRENT,
+					version: "",
 				},
 			},
 			wantErr: nil,
@@ -159,11 +150,11 @@ func TestGetSecretVersionCaching(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			smc := newStubClientWithSecrets()
-			smc.failIfAccessedMoreThanOnce = true
+			azsc := newStubClientWithSecrets()
+			azsc.failIfAccessedMoreThanOnce = true
 
 			c := Client{
-				client:      smc,
+				client:      azsc,
 				secretCache: secretly.NewSecretCache(),
 			}
 
