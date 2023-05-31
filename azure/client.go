@@ -2,7 +2,6 @@ package azure
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/keyvault/azsecrets"
@@ -104,14 +103,11 @@ func (c *Client) GetSecret(ctx context.Context, name string) ([]byte, error) {
 // GetSecretWithVersion retrieves the specific secret version for name
 // from Azure Key Vault Secrets.
 func (c *Client) GetSecretWithVersion(ctx context.Context, name, version string) ([]byte, error) {
-	fmt.Println("here1")
 	switch version {
 	case secretly.DefaultVersion, "":
-		fmt.Println("here2")
 		return c.GetSecret(ctx, name)
 	}
 
-	fmt.Println("here3")
 	if b, hit := c.secretCache.Get(name, version); hit {
 		return b, nil
 	}

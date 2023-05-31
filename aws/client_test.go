@@ -58,7 +58,6 @@ func (c *stubClient) GetSecretValueWithContext(ctx context.Context, input *secre
 	}
 
 	key := fmt.Sprintf(secretKeyFormat, *input.SecretId, version)
-	fmt.Println(key)
 
 	if b, ok := c.secrets[key]; ok {
 		v := string(b)
