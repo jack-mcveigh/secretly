@@ -15,10 +15,13 @@ type azuresc interface {
 
 // Config provides both Azure Key Vault Secrets client and secretly wrapper configurations.
 type Config struct {
+	// VaultURI is the uri of the Azure Key Vault instance.
 	VaultURI string
 
+	// Credential is the credential for the Azure Key Vault instance.
 	Credential azcore.TokenCredential
 
+	// Options are optional settings for the Azure Key Vault Secrets client.
 	Options *azsecrets.ClientOptions
 
 	secretly.Config
