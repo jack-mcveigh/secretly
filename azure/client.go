@@ -24,7 +24,7 @@ type Config struct {
 	// Options are optional settings for the Azure Key Vault Secrets client.
 	Options *azsecrets.ClientOptions
 
-	secretly.Config
+	SecretlyConfig secretly.Config
 }
 
 // Client is the Azure Key Vault Secrets client wrapper.
@@ -51,7 +51,7 @@ func NewClient(ctx context.Context, cfg Config) (*Client, error) {
 	}
 
 	var sc secretly.SecretCache
-	if cfg.DisableCaching {
+	if cfg.SecretlyConfig.DisableCaching {
 		sc = secretly.NewNoOpSecretCache()
 	} else {
 		sc = secretly.NewSecretCache()
@@ -67,7 +67,7 @@ func NewClient(ctx context.Context, cfg Config) (*Client, error) {
 // Wrap wraps the Azure Key Vault Secrets client.
 func Wrap(client *azsecrets.Client, cfg Config) *Client {
 	var sc secretly.SecretCache
-	if cfg.DisableCaching {
+	if cfg.SecretlyConfig.DisableCaching {
 		sc = secretly.NewNoOpSecretCache()
 	} else {
 		sc = secretly.NewSecretCache()

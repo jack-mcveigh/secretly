@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"gopkg.in/yaml.v3"
+	yaml "gopkg.in/yaml.v3"
 )
 
 type (
@@ -61,24 +61,28 @@ func setFieldsWithPatch(unmarshal unmarshalFunc, b []byte, fields []Field) error
 		return err
 	}
 
-	for i, f := range fields {
-		if sc, ok := secretConfigMap[f.Name()]; ok {
-			if sc.Type != "" {
-				fields[i].SecretType = sc.Type
-			}
-			if sc.Name != "" {
-				fields[i].SecretName = sc.Name
-			}
-			if sc.Key != "" {
-				fields[i].MapKeyName = sc.Key
-			}
-			if sc.Version != "" {
-				fields[i].SecretVersion = sc.Version
-			}
-			if sc.SplitWords {
-				fields[i].SplitWords = sc.SplitWords
-			}
+	for idx, f := range fields {
+		sc, ok := secretConfigMap[f.Name()]
+		if !ok {
+			continue
 		}
+
+		if sc.Type != "" {
+			fields[idx].SecretType = sc.Type
+		}
+		if sc.Name != "" {
+			fields[idx].SecretName = sc.Name
+		}
+		if sc.Key != "" {
+			fields[idx].MapKeyName = sc.Key
+		}
+		if sc.Version != "" {
+			fields[idx].SecretVersion = sc.Version
+		}
+		if sc.SplitWords {
+			fields[idx].SplitWords = sc.SplitWords
+		}
+
 	}
 
 	return nil

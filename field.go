@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"time"
 
-	"gopkg.in/yaml.v3"
+	yaml "gopkg.in/yaml.v3"
 )
 
 // Default values for optional field tags
@@ -185,55 +185,55 @@ func (f *Field) Set(b []byte) error {
 func (f *Field) setText(b []byte) error {
 	const ErrFailedConvertFormat = "failed to convert secret \"%s's\" key, \"%s\" to %s: %w"
 
-	value := string(b)
+	byteString := string(b)
 
 	typ := f.Value.Type()
 	switch f.Value.Kind() {
 	case reflect.String:
-		f.Value.SetString(value)
+		f.Value.SetString(byteString)
 
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		var (
-			v   int64
-			err error
+			value int64
+			err   error
 		)
 
 		if f.Value.Kind() == reflect.Int64 && typ.PkgPath() == "time" && typ.Name() == "Duration" {
 			var d time.Duration
-			d, err = time.ParseDuration(value)
-			v = int64(d)
+			d, err = time.ParseDuration(byteString)
+			value = int64(d)
 		} else {
-			v, err = strconv.ParseInt(value, 0, typ.Bits())
+			value, err = strconv.ParseInt(byteString, 0, typ.Bits())
 		}
 		if err != nil {
 			t := fmt.Sprintf("int%d", typ.Bits())
 			return fmt.Errorf(ErrFailedConvertFormat, f.SecretName, f.MapKeyName, t, err)
 		}
 
-		f.Value.SetInt(v)
+		f.Value.SetInt(value)
 
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		v, err := strconv.ParseUint(value, 0, typ.Bits())
+		value, err := strconv.ParseUint(byteString, 0, typ.Bits())
 		if err != nil {
 			t := fmt.Sprintf("uint%d", typ.Bits())
 			return fmt.Errorf(ErrFailedConvertFormat, f.SecretName, f.MapKeyName, t, err)
 		}
-		f.Value.SetUint(v)
+		f.Value.SetUint(value)
 
 	case reflect.Bool:
-		v, err := strconv.ParseBool(value)
+		value, err := strconv.ParseBool(byteString)
 		if err != nil {
 			return fmt.Errorf(ErrFailedConvertFormat, f.SecretName, f.MapKeyName, "bool", err)
 		}
-		f.Value.SetBool(v)
+		f.Value.SetBool(value)
 
 	case reflect.Float32, reflect.Float64:
-		v, err := strconv.ParseFloat(value, typ.Bits())
+		value, err := strconv.ParseFloat(byteString, typ.Bits())
 		if err != nil {
 			t := fmt.Sprintf("float%d", typ.Bits())
 			return fmt.Errorf(ErrFailedConvertFormat, f.SecretName, f.MapKeyName, t, err)
 		}
-		f.Value.SetFloat(v)
+		f.Value.SetFloat(value)
 	}
 
 	return nil
@@ -276,37 +276,32 @@ func (f *Field) setYAML(b []byte) error {
 // parseOptionalStructTagKey parses the provided key's value from the struct field,
 // returning the value as the type T, a bool indicating if the key was present, and an
 // error if the key's value was not a valid T
-func parseOptionalStructTagKey[T any](sf reflect.StructField, key string) (T, bool, error) {
-	var (
-		raw string
-		v   T
-		ok  bool
-		err error
-	)
+func parseOptionalStructTagKey[T any](structField reflect.StructField, key string) (value T, ok bool, err error) {
+	var raw string
 
-	if raw, ok = sf.Tag.Lookup(key); ok { // If key present
-		switch any(v).(type) {
+	if raw, ok = structField.Tag.Lookup(key); ok { // If key present
+		switch any(value).(type) {
 		case string:
-			v = any(raw).(T)
+			value = any(raw).(T)
 		case int:
 			i, err := strconv.Atoi(raw)
 			if err != nil {
 				break
 			}
-			v = any(i).(T)
+			value = any(i).(T)
 		case bool:
 			b, err := strconv.ParseBool(raw)
 			if err != nil {
 				break
 			}
-			v = any(b).(T)
+			value = any(b).(T)
 		}
 
 		if err != nil {
-			return v, false, fmt.Errorf("%w: %w", ErrInvalidStructTagValue, err)
+			return value, false, fmt.Errorf("%w: %w", ErrInvalidStructTagValue, err)
 		}
 	}
-	return v, ok, nil
+	return value, ok, nil
 }
 
 // splitWords converts the camelCase/PascalCase string, s, to snake_case

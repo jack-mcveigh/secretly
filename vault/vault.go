@@ -19,5 +19,5 @@ type Config struct {
 	// which is the recommended starting configuration.
 	VaultConfig *vault.Config
 
-	secretly.Config
+	SecretlyConfig secretly.Config
 }

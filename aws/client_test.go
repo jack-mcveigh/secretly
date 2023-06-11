@@ -70,6 +70,8 @@ func (c *stubClient) GetSecretValueWithContext(ctx context.Context, input *secre
 }
 
 func TestGetSecretVersion(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name       string
 		secretInfo secretInfo
@@ -116,6 +118,9 @@ func TestGetSecretVersion(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			tt := tt
+			t.Parallel()
+
 			smc := newStubClientWithSecrets()
 			c := Client{client: smc, secretCache: secretly.NewSecretCache()}
 
@@ -135,6 +140,8 @@ func TestGetSecretVersion(t *testing.T) {
 }
 
 func TestGetSecretVersionCaching(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name        string
 		secretInfos []secretInfo
@@ -158,6 +165,9 @@ func TestGetSecretVersionCaching(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			tt := tt
+			t.Parallel()
+
 			smc := newStubClientWithSecrets()
 			smc.failIfAccessedMoreThanOnce = true
 

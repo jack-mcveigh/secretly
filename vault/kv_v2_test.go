@@ -20,7 +20,6 @@ type stubKVv2Client struct {
 }
 
 func newStubKVv2ClientWithSecrets() *stubKVv2Client {
-
 	c := &stubKVv2Client{
 		secrets: make(map[string][]byte),
 	}
@@ -60,6 +59,8 @@ func (c *stubKVv2Client) GetVersion(ctx context.Context, secretPath string, vers
 }
 
 func TestKVv2GetSecretVersion(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name       string
 		secretInfo secretInfo
@@ -106,6 +107,9 @@ func TestKVv2GetSecretVersion(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			tt := tt
+			t.Parallel()
+
 			smc := newStubKVv2ClientWithSecrets()
 			c := KVv2Client{client: smc, secretCache: secretly.NewSecretCache()}
 

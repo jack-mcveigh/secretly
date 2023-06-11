@@ -7,7 +7,7 @@ import (
 
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
 	"cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
-	"github.com/googleapis/gax-go/v2"
+	gax "github.com/googleapis/gax-go/v2"
 	"github.com/jack-mcveigh/secretly"
 	"google.golang.org/api/option"
 )
@@ -25,7 +25,7 @@ type Config struct {
 	// ProjectId identifies the GCP project from which to retrieve the secrets.
 	ProjectId string
 
-	secretly.Config
+	SecretlyConfig secretly.Config
 }
 
 // Client is the GCP Secret Manager Client wrapper.
@@ -55,7 +55,7 @@ func NewClient(ctx context.Context, cfg Config, opts ...option.ClientOption) (*C
 	}
 
 	var sc secretly.SecretCache
-	if cfg.DisableCaching {
+	if cfg.SecretlyConfig.DisableCaching {
 		sc = secretly.NewNoOpSecretCache()
 	} else {
 		sc = secretly.NewSecretCache()
@@ -72,7 +72,7 @@ func NewClient(ctx context.Context, cfg Config, opts ...option.ClientOption) (*C
 // Wrap wraps the GCP client.
 func Wrap(client *secretmanager.Client, cfg Config) *Client {
 	var sc secretly.SecretCache
-	if cfg.DisableCaching {
+	if cfg.SecretlyConfig.DisableCaching {
 		sc = secretly.NewNoOpSecretCache()
 	} else {
 		sc = secretly.NewSecretCache()
