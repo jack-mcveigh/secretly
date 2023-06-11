@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"time"
 
-	"gopkg.in/yaml.v3"
+	yaml "gopkg.in/yaml.v3"
 )
 
 // Default values for optional field tags

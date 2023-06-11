@@ -28,7 +28,7 @@ type Config struct {
 	// ConfigProvider provides service clients with a client.Config.
 	ConfigProvider client.ConfigProvider
 
-	secretly.Config
+	SecretlyConfig secretly.Config
 }
 
 // Client is the AWS Secrets Manager Client wrapper.
@@ -52,7 +52,7 @@ func NewClient(cfg Config, cfgs ...*aws.Config) *Client {
 	smc := secretsmanager.New(cfg.ConfigProvider, cfgs...)
 
 	var sc secretly.SecretCache
-	if cfg.DisableCaching {
+	if cfg.SecretlyConfig.DisableCaching {
 		sc = secretly.NewNoOpSecretCache()
 	} else {
 		sc = secretly.NewSecretCache()
@@ -68,7 +68,7 @@ func NewClient(cfg Config, cfgs ...*aws.Config) *Client {
 // Wrap wraps the AWS Secrets Manager client.
 func Wrap(client *secretsmanager.SecretsManager, cfg Config) *Client {
 	var sc secretly.SecretCache
-	if cfg.DisableCaching {
+	if cfg.SecretlyConfig.DisableCaching {
 		sc = secretly.NewNoOpSecretCache()
 	} else {
 		sc = secretly.NewSecretCache()

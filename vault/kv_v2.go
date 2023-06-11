@@ -41,7 +41,7 @@ func NewKVv2Client(cfg Config) (*KVv2Client, error) {
 	}
 
 	var sc secretly.SecretCache
-	if cfg.DisableCaching {
+	if cfg.SecretlyConfig.DisableCaching {
 		sc = secretly.NewNoOpSecretCache()
 	} else {
 		sc = secretly.NewSecretCache()
@@ -57,7 +57,7 @@ func NewKVv2Client(cfg Config) (*KVv2Client, error) {
 // WrapKVv2 wraps the Vault KVv2 Secrets Engine client.
 func WrapKVv2(client *vault.KVv2, cfg Config) *KVv2Client {
 	var sc secretly.SecretCache
-	if cfg.DisableCaching {
+	if cfg.SecretlyConfig.DisableCaching {
 		sc = secretly.NewNoOpSecretCache()
 	} else {
 		sc = secretly.NewSecretCache()

@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
-	"github.com/googleapis/gax-go/v2"
+	gax "github.com/googleapis/gax-go/v2"
 	"github.com/jack-mcveigh/secretly"
 )
 
