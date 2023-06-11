@@ -22,6 +22,8 @@ func newSecretCacheWithEntries() secretCache {
 }
 
 func TestSecretCacheAdd(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name       string
 		secretInfo secretInfo
@@ -67,6 +69,9 @@ func TestSecretCacheAdd(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			tt := tt
+			t.Parallel()
+
 			sc := newSecretCacheWithEntries()
 
 			sc.Add(tt.secretInfo.name, tt.secretInfo.version, tt.secretInfo.content)
@@ -89,6 +94,8 @@ func TestSecretCacheAdd(t *testing.T) {
 }
 
 func TestSecretCacheGet(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name       string
 		secretInfo secretInfo
@@ -124,6 +131,9 @@ func TestSecretCacheGet(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			tt := tt
+			t.Parallel()
+
 			sc := newSecretCacheWithEntries()
 
 			got, ok := sc.Get(tt.secretInfo.name, tt.secretInfo.version)

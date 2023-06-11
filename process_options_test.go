@@ -43,6 +43,8 @@ func newTestingSpecificationFields() []Field {
 }
 
 func TestApplyConfig(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name          string
 		unmarshalFunc unmarshalFunc
@@ -184,6 +186,9 @@ func TestApplyConfig(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			tt := tt
+			t.Parallel()
+
 			fields := newTestingSpecificationFields()
 			err := setFieldsWithPatch(tt.unmarshalFunc, tt.content, fields)
 
@@ -318,10 +323,7 @@ func TestWithVersionsFromEnv(t *testing.T) {
 	for _, tt := range tests {
 		// setup env vars.
 		for k, v := range tt.envVarMap {
-			err := os.Setenv(k, v)
-			if err != nil {
-				t.Fatalf("Failed to set env. var. \"%s\" =\"%s\": %v", k, v, err)
-			}
+			t.Setenv(k, v)
 		}
 
 		t.Run(tt.name, func(t *testing.T) {

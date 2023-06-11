@@ -35,7 +35,6 @@ type stubKVv1Client struct {
 }
 
 func newStubKVv1ClientWithSecrets() *stubKVv1Client {
-
 	c := &stubKVv1Client{
 		secrets: make(map[string][]byte),
 	}
@@ -79,6 +78,8 @@ func (c *stubKVv1Client) GetVersion(ctx context.Context, secretPath string, vers
 }
 
 func TestKVv1GetSecretVersion(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name       string
 		secretInfo secretInfo
@@ -125,6 +126,9 @@ func TestKVv1GetSecretVersion(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			tt := tt
+			t.Parallel()
+
 			smc := newStubKVv1ClientWithSecrets()
 			c := KVv1Client{client: smc, secretCache: secretly.NewSecretCache()}
 
@@ -144,6 +148,8 @@ func TestKVv1GetSecretVersion(t *testing.T) {
 }
 
 func TestKVv1GetSecretVersionCaching(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name        string
 		secretInfos []secretInfo
@@ -167,6 +173,9 @@ func TestKVv1GetSecretVersionCaching(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			tt := tt
+			t.Parallel()
+
 			smc := newStubKVv1ClientWithSecrets()
 			smc.failIfAccessedMoreThanOnce = true
 

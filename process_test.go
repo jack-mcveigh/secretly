@@ -57,6 +57,8 @@ type TextWithKeyNameSpecification struct {
 }
 
 func TestParsingCorrectSpecification(t *testing.T) {
+	t.Parallel()
+
 	want := correctSpecificationFields
 
 	spec := correctSpecification{ignored: "testing", ignoredComposedSpecification: CorrectSubSpecification{}}
@@ -81,6 +83,8 @@ func TestParsingCorrectSpecification(t *testing.T) {
 }
 
 func TestParsingTextWithKeyNameSpecification(t *testing.T) {
+	t.Parallel()
+
 	spec := TextWithKeyNameSpecification{}
 	_, err := processSpec(&spec)
 	if err != nil {
@@ -91,6 +95,8 @@ func TestParsingTextWithKeyNameSpecification(t *testing.T) {
 }
 
 func TestParsingNonPointerSpecification(t *testing.T) {
+	t.Parallel()
+
 	spec := correctSpecification{}
 
 	_, err := processSpec(spec)

@@ -62,6 +62,8 @@ func (c *stubClient) GetSecret(ctx context.Context, name string, version string,
 func (c *stubClient) Close() error { return nil }
 
 func TestGetSecretVersion(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name       string
 		secretInfo secretInfo
@@ -108,6 +110,9 @@ func TestGetSecretVersion(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			tt := tt
+			t.Parallel()
+
 			azsc := newStubClientWithSecrets()
 			c := Client{client: azsc, secretCache: secretly.NewSecretCache()}
 
@@ -127,6 +132,8 @@ func TestGetSecretVersion(t *testing.T) {
 }
 
 func TestGetSecretVersionCaching(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name        string
 		secretInfos []secretInfo
@@ -150,6 +157,9 @@ func TestGetSecretVersionCaching(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			tt := tt
+			t.Parallel()
+
 			azsc := newStubClientWithSecrets()
 			azsc.failIfAccessedMoreThanOnce = true
 
