@@ -11,19 +11,19 @@ var regexMatchCapitals = regexp.MustCompile("([a-z0-9])([A-Z])")
 // Process interprets the provided specification,
 // resolving the described secrets
 // with the provided secret management Client.
-func Process(c Client, spec any, opts ...ProcessOption) error {
+func Process(client Client, spec any, opts ...ProcessOption) error {
 	fields, err := processSpec(spec, opts...)
 	if err != nil {
 		return err
 	}
 
-	for _, f := range fields {
-		b, err := c.GetSecretWithVersion(context.Background(), f.SecretName, f.SecretVersion)
+	for _, field := range fields {
+		b, err := client.GetSecretWithVersion(context.Background(), field.SecretName, field.SecretVersion)
 		if err != nil {
 			return err
 		}
 
-		err = f.Set(b)
+		err = field.Set(b)
 		if err != nil {
 			return err
 		}
@@ -70,7 +70,7 @@ func processSpec(spec any, opts ...ProcessOption) ([]Field, error) {
 func processStruct(specValue reflect.Value, specType reflect.Type) ([]Field, error) {
 	fields := make([]Field, 0, specValue.NumField())
 	for i := 0; i < specValue.NumField(); i++ {
-		f, fStructField := specValue.Field(i), specType.Field(i)
+		fValue, fStructField := specValue.Field(i), specType.Field(i)
 
 		// Get the ignored value, setting it to false if not explicitly set
 		ignored, _, err := parseOptionalStructTagKey[bool](fStructField, tagIgnored)
@@ -82,7 +82,7 @@ func processStruct(specValue reflect.Value, specType reflect.Type) ([]Field, err
 			}
 		}
 
-		if ignored || !f.CanSet() {
+		if ignored || !fValue.CanSet() {
 			continue
 		}
 
@@ -90,26 +90,26 @@ func processStruct(specValue reflect.Value, specType reflect.Type) ([]Field, err
 		case reflect.Interface | reflect.Array | reflect.Slice | reflect.Map:
 			// ignore these types
 		case reflect.Struct:
-			fs, err := processStruct(f, fStructField.Type)
+			fs, err := processStruct(fValue, fStructField.Type)
 			if err != nil {
 				return nil, err
 			}
 			fields = append(fields, fs...)
 		case reflect.Pointer:
-			for f.Kind() == reflect.Ptr {
-				if f.IsNil() {
-					if f.Type().Elem().Kind() != reflect.Struct {
+			for fValue.Kind() == reflect.Ptr {
+				if fValue.IsNil() {
+					if fValue.Type().Elem().Kind() != reflect.Struct {
 						// value other than struct
 						break
 					}
 					// value is a struct, initialize it
-					f.Set(reflect.New(f.Type().Elem()))
+					fValue.Set(reflect.New(fValue.Type().Elem()))
 				}
-				f = f.Elem()
+				fValue = fValue.Elem()
 			}
 
-			if f.Kind() == reflect.Struct {
-				subFields, err := processStruct(f, f.Type())
+			if fValue.Kind() == reflect.Struct {
+				subFields, err := processStruct(fValue, fValue.Type())
 				if err != nil {
 					return nil, err
 				}
@@ -120,7 +120,7 @@ func processStruct(specValue reflect.Value, specType reflect.Type) ([]Field, err
 
 			fallthrough
 		default:
-			field, err := NewField(f, fStructField)
+			field, err := NewField(fValue, fStructField)
 			if err != nil {
 				return nil, err
 			}
