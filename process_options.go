@@ -62,23 +62,27 @@ func setFieldsWithPatch(unmarshal unmarshalFunc, b []byte, fields []Field) error
 	}
 
 	for idx, f := range fields {
-		if sc, ok := secretConfigMap[f.Name()]; ok {
-			if sc.Type != "" {
-				fields[idx].SecretType = sc.Type
-			}
-			if sc.Name != "" {
-				fields[idx].SecretName = sc.Name
-			}
-			if sc.Key != "" {
-				fields[idx].MapKeyName = sc.Key
-			}
-			if sc.Version != "" {
-				fields[idx].SecretVersion = sc.Version
-			}
-			if sc.SplitWords {
-				fields[idx].SplitWords = sc.SplitWords
-			}
+		sc, ok := secretConfigMap[f.Name()]
+		if !ok {
+			continue
 		}
+
+		if sc.Type != "" {
+			fields[idx].SecretType = sc.Type
+		}
+		if sc.Name != "" {
+			fields[idx].SecretName = sc.Name
+		}
+		if sc.Key != "" {
+			fields[idx].MapKeyName = sc.Key
+		}
+		if sc.Version != "" {
+			fields[idx].SecretVersion = sc.Version
+		}
+		if sc.SplitWords {
+			fields[idx].SplitWords = sc.SplitWords
+		}
+
 	}
 
 	return nil

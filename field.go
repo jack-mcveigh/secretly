@@ -276,37 +276,32 @@ func (f *Field) setYAML(b []byte) error {
 // parseOptionalStructTagKey parses the provided key's value from the struct field,
 // returning the value as the type T, a bool indicating if the key was present, and an
 // error if the key's value was not a valid T
-func parseOptionalStructTagKey[T any](structField reflect.StructField, key string) (T, bool, error) {
-	var (
-		raw string
-		v   T
-		ok  bool
-		err error
-	)
+func parseOptionalStructTagKey[T any](structField reflect.StructField, key string) (value T, ok bool, err error) {
+	var raw string
 
 	if raw, ok = structField.Tag.Lookup(key); ok { // If key present
-		switch any(v).(type) {
+		switch any(value).(type) {
 		case string:
-			v = any(raw).(T)
+			value = any(raw).(T)
 		case int:
 			i, err := strconv.Atoi(raw)
 			if err != nil {
 				break
 			}
-			v = any(i).(T)
+			value = any(i).(T)
 		case bool:
 			b, err := strconv.ParseBool(raw)
 			if err != nil {
 				break
 			}
-			v = any(b).(T)
+			value = any(b).(T)
 		}
 
 		if err != nil {
-			return v, false, fmt.Errorf("%w: %w", ErrInvalidStructTagValue, err)
+			return value, false, fmt.Errorf("%w: %w", ErrInvalidStructTagValue, err)
 		}
 	}
-	return v, ok, nil
+	return value, ok, nil
 }
 
 // splitWords converts the camelCase/PascalCase string, s, to snake_case
