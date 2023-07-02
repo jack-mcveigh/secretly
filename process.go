@@ -3,10 +3,7 @@ package secretly
 import (
 	"context"
 	"reflect"
-	"regexp"
 )
-
-var regexMatchCapitals = regexp.MustCompile("([a-z0-9])([A-Z])")
 
 // Process interprets the provided specification,
 // resolving the described secrets

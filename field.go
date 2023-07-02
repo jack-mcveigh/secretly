@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	yaml "gopkg.in/yaml.v3"
@@ -24,6 +26,11 @@ const (
 	tagSplitWords = "split_words"
 	tagType       = "type"
 	tagVersion    = "version"
+)
+
+var (
+	regexGatherWords = regexp.MustCompile("([^A-Z]+|[A-Z]+[^A-Z]+|[A-Z]+)")
+	regexAcronym     = regexp.MustCompile("([A-Z]+)([A-Z][^A-Z]+)")
 )
 
 // Field represents a field in a struct,
@@ -151,7 +158,7 @@ func NewField(fValue reflect.Value, fStructField reflect.StructField) (Field, er
 
 // Name returns the resolved name of the field. If the secret type is "json" or "yaml",
 // the secret name and key name are combined. If "split_words" is true, the combination
-// of secret name and key name are split with an underscore
+// of secret name and key name are transformed into uppercase, snake case.
 func (f *Field) Name() string {
 	name := f.SecretName
 
@@ -306,5 +313,19 @@ func parseOptionalStructTagKey[T any](structField reflect.StructField, key strin
 
 // splitWords converts the camelCase/PascalCase string, s, to snake_case
 func splitWords(s string) string {
-	return regexMatchCapitals.ReplaceAllString(s, "${1}_${2}")
+	words := regexGatherWords.FindAllStringSubmatch(s, -1)
+	if len(words) == 0 {
+		return s
+	}
+
+	var name []string
+	for _, words := range words {
+		if m := regexAcronym.FindStringSubmatch(words[0]); len(m) == 3 {
+			name = append(name, m[1], m[2])
+		} else {
+			name = append(name, words[0])
+		}
+	}
+
+	return strings.Join(name, "_")
 }

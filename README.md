@@ -194,3 +194,9 @@ Secretly provides two options for specifying secret versions other than the __ve
 
         ...
         ```
+
+## References
+
+* [envconfig](https://github.com/kelseyhightower/envconfig)
+
+    The API for secretly was inspired by and borrows from envconfig. A simple yet powerful package for managing configuration data from environment variables.
