@@ -41,7 +41,7 @@ type SecretConfig struct {
 
 func main() {
 	client, err := secretlygcp.NewClient(context.Background(), secretlygcp.Config{
-		ProjectId: gcpProjectId,
+		ProjectID: gcpProjectId,
 	})
 	if err != nil {
 		log.Fatalf("Failed to initialize gcp secret manager client: %v", err)

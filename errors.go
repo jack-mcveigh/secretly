@@ -7,7 +7,6 @@ import (
 
 var (
 	ErrInvalidSpecification        = errors.New("specification must be a struct pointer")
-	ErrInvalidStructTagValue       = errors.New("invalid struct tag key value")
 	ErrInvalidSecretType           = errors.New("invalid secret type")
 	ErrInvalidSecretVersion        = errors.New("invalid secret version")
 	ErrSecretTypeDoesNotSupportKey = errors.New("secret type does not support \"key\"")
