@@ -2,6 +2,7 @@ package secretly
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -25,6 +26,8 @@ type (
 	}
 )
 
+var ErrInvalidFileType = errors.New("invalid file type")
+
 // ApplyPatch returns an ProcessOption which overwrites
 // the specified/default field values with the provided patch.
 // Can be used to overwrite any of the configurable field values.
@@ -37,7 +40,7 @@ func ApplyPatch(filePath string) ProcessOption {
 	return func(fields []Field) error {
 		b, err := os.ReadFile(filePath)
 		if err != nil {
-			return err
+			return fmt.Errorf("ApplyPatch: %w", err)
 		}
 
 		switch ext := filepath.Ext(filePath); ext {
@@ -46,9 +49,9 @@ func ApplyPatch(filePath string) ProcessOption {
 		case ".yaml", ".yml":
 			err = setFieldsWithPatch(yaml.Unmarshal, b, fields)
 		default:
-			err = fmt.Errorf("file type \"%s\" not supported", ext)
+			err = fmt.Errorf("%w: %s", ErrInvalidFileType, ext)
 		}
-		return err
+		return fmt.Errorf("ApplyPatch: %w", err)
 	}
 }
 
@@ -82,7 +85,6 @@ func setFieldsWithPatch(unmarshal unmarshalFunc, b []byte, fields []Field) error
 		if sc.SplitWords {
 			fields[idx].SplitWords = sc.SplitWords
 		}
-
 	}
 
 	return nil
@@ -105,6 +107,7 @@ func WithVersionsFromEnv(prefix string) ProcessOption {
 		for i, field := range fields {
 			name := strings.ReplaceAll(field.Name(), "-", "_")
 			key := strings.ToUpper(prefix + name + "_VERSION")
+
 			if v, ok := os.LookupEnv(key); ok {
 				fields[i].SecretVersion = v // TODO: Support types other than string
 			}

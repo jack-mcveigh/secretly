@@ -18,8 +18,8 @@ type noOpSecretCache struct{}
 // meant to be used for disabling secret caching.
 func NewNoOpSecretCache() noOpSecretCache { return noOpSecretCache{} }
 
-func (noOpSecretCache) Add(name, version string, content []byte) {}
-func (noOpSecretCache) Get(name, version string) ([]byte, bool)  { return nil, false }
+func (noOpSecretCache) Add(_, _ string, content []byte) {}
+func (noOpSecretCache) Get(_, _ string) ([]byte, bool)  { return nil, false }
 
 // secretCacheEntry is a map of versions to the secret content.
 type secretCacheEntry map[string][]byte

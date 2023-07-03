@@ -22,8 +22,8 @@ type gcpsmc interface {
 
 // Config provides both GCP Secret Manager client and secretly wrapper configurations.
 type Config struct {
-	// ProjectId identifies the GCP project from which to retrieve the secrets.
-	ProjectId string
+	// ProjectID identifies the GCP project from which to retrieve the secrets.
+	ProjectID string
 
 	SecretlyConfig secretly.Config
 }
@@ -63,7 +63,7 @@ func NewClient(ctx context.Context, cfg Config, opts ...option.ClientOption) (*C
 
 	c := &Client{
 		client:      smc,
-		projectId:   cfg.ProjectId,
+		projectId:   cfg.ProjectID,
 		secretCache: sc,
 	}
 	return c, nil
@@ -80,7 +80,7 @@ func Wrap(client *secretmanager.Client, cfg Config) *Client {
 
 	c := &Client{
 		client:      client,
-		projectId:   cfg.ProjectId,
+		projectId:   cfg.ProjectID,
 		secretCache: sc,
 	}
 	return c

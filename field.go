@@ -13,13 +13,13 @@ import (
 	yaml "gopkg.in/yaml.v3"
 )
 
-// Default values for optional field tags
+// Default values for optional field tags.
 const (
-	// defaults
+	// Defaults.
 	DefaultType    = "text"
 	DefaultVersion = "0"
 
-	// tags
+	// Tags.
 	tagIgnored    = "ignored"
 	tagKey        = "key"
 	tagName       = "name"
@@ -31,6 +31,10 @@ const (
 var (
 	regexGatherWords = regexp.MustCompile("([^A-Z]+|[A-Z]+[^A-Z]+|[A-Z]+)")
 	regexAcronym     = regexp.MustCompile("([A-Z]+)([A-Z][^A-Z]+)")
+
+	ErrInvalidJSONSecret = errors.New("secret is not valid json")
+	ErrInvalidYAMLSecret = errors.New("secret is not valid yaml")
+	ErrSecretMissingKey  = errors.New("secret is missing provided key")
 )
 
 // Field represents a field in a struct,
@@ -66,6 +70,7 @@ func NewField(fValue reflect.Value, fStructField reflect.StructField) (Field, er
 			Err:  err,
 		}
 	}
+
 	if !ok {
 		newField.SplitWords = false
 	}
@@ -80,9 +85,11 @@ func NewField(fValue reflect.Value, fStructField reflect.StructField) (Field, er
 			Err:  err,
 		}
 	}
+
 	if !ok {
 		newField.SecretType = DefaultType
 	}
+
 	switch newField.SecretType {
 	case "text", "json", "yaml":
 	default:
@@ -103,6 +110,7 @@ func NewField(fValue reflect.Value, fStructField reflect.StructField) (Field, er
 			Err:  err,
 		}
 	}
+
 	if !ok {
 		newField.SecretName = fStructField.Name
 		if newField.SplitWords {
@@ -168,8 +176,10 @@ func (f *Field) Name() string {
 		if f.SplitWords {
 			delimiter = "_"
 		}
+
 		name += delimiter + f.MapKeyName
 	}
+
 	return name
 }
 
@@ -194,7 +204,8 @@ func (f *Field) setText(b []byte) error {
 
 	byteString := string(b)
 
-	typ := f.Value.Type()
+	valueType := f.Value.Type()
+
 	switch f.Value.Kind() {
 	case reflect.String:
 		f.Value.SetString(byteString)
@@ -205,26 +216,29 @@ func (f *Field) setText(b []byte) error {
 			err   error
 		)
 
-		if f.Value.Kind() == reflect.Int64 && typ.PkgPath() == "time" && typ.Name() == "Duration" {
+		if f.Value.Kind() == reflect.Int64 && valueType.PkgPath() == "time" && valueType.Name() == "Duration" {
 			var d time.Duration
 			d, err = time.ParseDuration(byteString)
 			value = int64(d)
 		} else {
-			value, err = strconv.ParseInt(byteString, 0, typ.Bits())
+			value, err = strconv.ParseInt(byteString, 0, valueType.Bits())
 		}
 		if err != nil {
-			t := fmt.Sprintf("int%d", typ.Bits())
+			t := fmt.Sprintf("int%d", valueType.Bits())
+
 			return fmt.Errorf(ErrFailedConvertFormat, f.SecretName, f.MapKeyName, t, err)
 		}
 
 		f.Value.SetInt(value)
 
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		value, err := strconv.ParseUint(byteString, 0, typ.Bits())
+		value, err := strconv.ParseUint(byteString, 0, valueType.Bits())
 		if err != nil {
-			t := fmt.Sprintf("uint%d", typ.Bits())
+			t := fmt.Sprintf("uint%d", valueType.Bits())
+
 			return fmt.Errorf(ErrFailedConvertFormat, f.SecretName, f.MapKeyName, t, err)
 		}
+
 		f.Value.SetUint(value)
 
 	case reflect.Bool:
@@ -232,14 +246,17 @@ func (f *Field) setText(b []byte) error {
 		if err != nil {
 			return fmt.Errorf(ErrFailedConvertFormat, f.SecretName, f.MapKeyName, "bool", err)
 		}
+
 		f.Value.SetBool(value)
 
 	case reflect.Float32, reflect.Float64:
-		value, err := strconv.ParseFloat(byteString, typ.Bits())
+		value, err := strconv.ParseFloat(byteString, valueType.Bits())
 		if err != nil {
-			t := fmt.Sprintf("float%d", typ.Bits())
+			t := fmt.Sprintf("float%d", valueType.Bits())
+
 			return fmt.Errorf(ErrFailedConvertFormat, f.SecretName, f.MapKeyName, t, err)
 		}
+
 		f.Value.SetFloat(value)
 	}
 
@@ -253,14 +270,14 @@ func (f *Field) setJSON(b []byte) error {
 
 	err := json.Unmarshal(b, &secretMap)
 	if err != nil {
-		return errors.New("secret is not valid json")
+		return ErrInvalidJSONSecret
 	}
 
 	if value, ok := secretMap[f.MapKeyName]; ok {
 		return f.setText([]byte(value))
 	}
 
-	return fmt.Errorf("the json secret, \"%s\" does not contain key \"%s\"", f.SecretName, f.MapKeyName)
+	return fmt.Errorf("%w: secret \"%s\" missing \"%s\"", ErrSecretMissingKey, f.SecretName, f.MapKeyName)
 }
 
 // setYAML sets the field's underlying value,
@@ -270,14 +287,14 @@ func (f *Field) setYAML(b []byte) error {
 
 	err := yaml.Unmarshal(b, &secretMap)
 	if err != nil {
-		return errors.New("secret is not valid yaml")
+		return ErrInvalidYAMLSecret
 	}
 
 	if value, ok := secretMap[f.MapKeyName]; ok {
 		return f.setText([]byte(value))
 	}
 
-	return fmt.Errorf("the yaml secret, \"%s\" does not contain key \"%s\"", f.SecretName, f.MapKeyName)
+	return fmt.Errorf("%w: secret \"%s\" missing \"%s\"", ErrSecretMissingKey, f.SecretName, f.MapKeyName)
 }
 
 // parseOptionalStructTagKey parses the provided key's value from the struct field,
@@ -295,24 +312,29 @@ func parseOptionalStructTagKey[T any](structField reflect.StructField, key strin
 			if err != nil {
 				break
 			}
+
 			value = any(i).(T)
 		case bool:
 			b, err := strconv.ParseBool(raw)
 			if err != nil {
 				break
 			}
+
 			value = any(b).(T)
 		}
 
 		if err != nil {
-			return value, false, fmt.Errorf("%w: %w", ErrInvalidStructTagValue, err)
+			return value, false, fmt.Errorf("invalid struct tag key value: %w", err)
 		}
 	}
+
 	return value, ok, nil
 }
 
 // splitWords converts the camelCase/PascalCase string, s, to snake_case
 func splitWords(s string) string {
+	const minAcronymLength = 3
+
 	words := regexGatherWords.FindAllStringSubmatch(s, -1)
 	if len(words) == 0 {
 		return s
@@ -320,7 +342,7 @@ func splitWords(s string) string {
 
 	var name []string
 	for _, words := range words {
-		if m := regexAcronym.FindStringSubmatch(words[0]); len(m) == 3 {
+		if m := regexAcronym.FindStringSubmatch(words[0]); len(m) == minAcronymLength {
 			name = append(name, m[1], m[2])
 		} else {
 			name = append(name, words[0])
