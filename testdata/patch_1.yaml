@@ -1,0 +1,6 @@
+TopSecret:
+  version: latest
+TopSecretSpecificSecret:
+  version: 1
+Another_Top_Secret_Specific_Secret:
+  version: 100

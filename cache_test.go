@@ -11,13 +11,14 @@ type secretInfo struct {
 	content []byte
 }
 
-func newSecretCacheWithEntries() secretCache {
-	sc := NewSecretCache()
+func newSecretCacheWithEntries() *cache {
+	sc := newCache()
 
 	sc.cache["key1"] = secretCacheEntry{
 		"1":      []byte("key1: 1: secret content"),
 		"latest": []byte("key1: latest: secret content"),
 	}
+
 	return sc
 }
 
