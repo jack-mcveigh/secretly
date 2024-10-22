@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	ErrInvalidSpecification        = errors.New("specification must be a struct pointer")
+	ErrInvalidSpecification        = errors.New("invalid specification")
 	ErrInvalidSecretType           = errors.New("invalid secret type")
 	ErrInvalidSecretVersion        = errors.New("invalid secret version")
 	ErrSecretTypeDoesNotSupportKey = errors.New("secret type does not support \"key\"")
@@ -19,6 +19,8 @@ type StructTagError struct {
 	Err  error
 }
 
-func (e StructTagError) Error() string { return fmt.Sprintf("%s: %s: %s", e.Name, e.Key, e.Err) }
+func (e StructTagError) Error() string {
+	return fmt.Sprintf("field %q: key %q: %s", e.Name, e.Key, e.Err)
+}
 
 func (e StructTagError) Unwrap() error { return e.Err }

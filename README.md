@@ -5,22 +5,33 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/jack-mcveigh/secretly)](https://goreportcard.com/report/github.com/jack-mcveigh/secretly)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-___Secretly___ was created to allow Go applications to easily interface with popular secret management services and reduce secret ingestion boiler-plate. In-memory secret caching is included to reduce the number of operations against the secret management service, when dealing with secrets that store map data in the form of JSON and YAML.
-
-Below is a list of the currently supported secret management services:
-
-* [Google Cloud Platform's (GCP) Secret Manager](https://cloud.google.com/secret-manager)
-* [Amazon Web Services' (AWS) Secrets Manager](https://aws.amazon.com/secrets-manager/)
-* [Vault KV Secrets Engine](https://developer.hashicorp.com/vault/docs/secrets/kv)
-  * [KV Secrets Engine - Version 1](https://developer.hashicorp.com/vault/docs/secrets/kv/kv-v1)
-  * [KV Secrets Engine - Version 2](https://developer.hashicorp.com/vault/docs/secrets/kv/kv-v2)
-* [Microsoft Azure Key Vault](https://azure.microsoft.com/en-us/products/key-vault/)
-
-If there's a secret management service missing that you'd like to see included, create a [Feature Request](https://github.com/jack-mcveigh/secretly/issues/new)!
+___Secretly___ was created to allow Go applications to easily interface with secret management services and reduce secret ingestion boiler-plate. In-memory secret caching is included to reduce the number of operations against the secret management service, when dealing with secrets that store map data in the form of JSON and YAML.
 
 ## Usage
 
-See the brief overview below or check out our [examples](examples).
+```go
+type Secrets struct {
+    DatabaseUsername string `type:"yaml" name:"My-DB-Credentials" key:"username" split_words:"true"`
+
+    DatabasePassword string `type:"yaml" name:"My-DB-Credentials" key:"password"`
+}
+
+func getSecret (ctx context.Context, name, version string) ([]byte, error) {
+    // Use your secret manager of choice's client library here to retrieve secrets.
+    return []byte(""), nil
+}
+
+func example(ctx context.Context) Secrets {
+    var s Secrets
+    
+    err := secretly.Process(ctx, &s, getSecret)
+    if err != nil {
+        log.Fatal(err)
+    }
+    
+    return s
+}
+```
 
 ## Overview
 
@@ -137,26 +148,27 @@ Secretly provides two options for specifying secret versions other than the __ve
     * example.go
 
         ```go
-        ...
-
         type Secrets struct {
             DatabaseUsername string `type:"yaml" name:"My-DB-Credentials" key:"username" split_words:"true"`
 
             DatabasePassword string `type:"yaml" name:"My-DB-Credentials" key:"password"`
         }
 
-        func example(client secretly.Client) Secrets {
+        func getSecret (ctx context.Context, name, version string) ([]byte, error) {
+            // Use your secret manager of choice's client library here to retrieve secrets.
+            return []byte(""), nil
+        }
+
+        func example(ctx context.Context) Secrets {
             var s Secrets
             
-            err := client.Process(&s, secretly.ApplyPatch("versions.json"))
+            err := secretly.Process(ctx, &s, getSecret, secretly.WithPatchFile("versions.json"))
             if err != nil {
                 log.Fatal(err)
             }
             
             return s
         }
-
-        ...
         ```
 
 2. Read secret versions from environment variables:
@@ -173,26 +185,27 @@ Secretly provides two options for specifying secret versions other than the __ve
     * example.go
 
         ```go
-        ...
-
         type Secrets struct {
             DatabaseUsername string `type:"yaml" name:"My-DB-Credentials" key:"username" split_words:"true"`
 
             DatabasePassword string `type:"yaml" name:"My-DB-Credentials" key:"password"`
         }
 
-        func example(client secretly.Client) Secrets {
+        func getSecret (ctx context.Context, name, version string) ([]byte, error) {
+            // Use your secret manager of choice's client library here to retrieve secrets.
+            return []byte(""), nil
+        }
+
+        func example(ctx context.Context) Secrets {
             var s Secrets
             
-            err := client.Process(&s, secretly.WithVersionsFromEnv("EXAMPLE"))
+            err := secretly.Process(ctx, &s, getSecret, secretly.WithVersionsFromEnv("EXAMPLE"))
             if err != nil {
                 log.Fatal(err)
             }
             
             return s
         }
-
-        ...
         ```
 
 ## References

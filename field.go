@@ -13,13 +13,20 @@ import (
 	yaml "gopkg.in/yaml.v3"
 )
 
+type secretType string
+
 // Default values for optional field tags.
 const (
+	// Supported types of secrets values.
+	Text secretType = "text"
+	JSON secretType = "json"
+	YAML secretType = "yaml"
+
 	// Defaults.
-	DefaultType    = "text"
+	DefaultType    = Text
 	DefaultVersion = "0"
 
-	// Tags.
+	// Supported tags for modifying secretly's behavior.
 	tagIgnored    = "ignored"
 	tagKey        = "key"
 	tagName       = "name"
@@ -31,40 +38,45 @@ const (
 var (
 	regexGatherWords = regexp.MustCompile("([^A-Z]+|[A-Z]+[^A-Z]+|[A-Z]+)")
 	regexAcronym     = regexp.MustCompile("([A-Z]+)([A-Z][^A-Z]+)")
+)
 
+var (
 	ErrInvalidJSONSecret = errors.New("secret is not valid json")
 	ErrInvalidYAMLSecret = errors.New("secret is not valid yaml")
 	ErrSecretMissingKey  = errors.New("secret is missing provided key")
 )
 
-// Field represents a field in a struct,
+type fields = []field
+
+// field represents a field in a struct,
 // exposing its secretly tag values
 // and reference to the underlying value.
-type Field struct {
-	SecretType    string
-	SecretName    string
-	SecretVersion string
-	MapKeyName    string // NOTE: Only used when secretType is "json" or "yaml"
-	SplitWords    bool
-	Value         reflect.Value
+type field struct {
+	secretType    secretType
+	secretName    string
+	secretVersion string
+	mapKeyName    string // NOTE: Only used for JSONType and YAMLType secret types.
+	splitWords    bool
+	value         reflect.Value
+	cache         *cache
 }
 
-// NewField constructs a field referencing the provided reflect.Value with the tags from
+// newField constructs a field referencing the provided reflect.Value with the tags from
 // the reflect.StructField applied
-func NewField(fValue reflect.Value, fStructField reflect.StructField) (Field, error) {
+func newField(fValue reflect.Value, fStructField reflect.StructField) (field, error) {
 	var (
-		newField Field
+		newField field
 		ok       bool
 		err      error
 	)
 
 	// Set the reference to the field's reflection
-	newField.Value = fValue
+	newField.value = fValue
 
 	// Get the split_words value, setting it to false if not explicitly set
-	newField.SplitWords, ok, err = parseOptionalStructTagKey[bool](fStructField, tagSplitWords)
+	newField.splitWords, ok, err = parseOptionalStructTagKey[bool](fStructField, tagSplitWords)
 	if err != nil {
-		return Field{}, StructTagError{
+		return field{}, StructTagError{
 			Name: fStructField.Name,
 			Key:  tagSplitWords,
 			Err:  err,
@@ -72,14 +84,14 @@ func NewField(fValue reflect.Value, fStructField reflect.StructField) (Field, er
 	}
 
 	if !ok {
-		newField.SplitWords = false
+		newField.splitWords = false
 	}
 
 	// Get the type value, setting it to the default, "text", if not explicitly set.
 	// Also perform validation to ensure only valid types are provided
-	newField.SecretType, ok, err = parseOptionalStructTagKey[string](fStructField, tagType)
+	newField.secretType, ok, err = parseOptionalStructTagKey[secretType](fStructField, tagType)
 	if err != nil {
-		return Field{}, StructTagError{
+		return field{}, StructTagError{
 			Name: fStructField.Name,
 			Key:  tagType,
 			Err:  err,
@@ -87,24 +99,24 @@ func NewField(fValue reflect.Value, fStructField reflect.StructField) (Field, er
 	}
 
 	if !ok {
-		newField.SecretType = DefaultType
+		newField.secretType = DefaultType
 	}
 
-	switch newField.SecretType {
-	case "text", "json", "yaml":
+	switch newField.secretType {
+	case Text, JSON, YAML:
 	default:
-		return Field{}, StructTagError{
+		return field{}, StructTagError{
 			Name: fStructField.Name,
 			Key:  tagType,
-			Err:  ErrInvalidSecretType,
+			Err:  fmt.Errorf("%w: %q", ErrInvalidSecretType, newField.secretType),
 		}
 	}
 
 	// Get the name value, setting it to the field's name if not explicitly set.
 	// Split the words if the default value was used and split_words was set to true
-	newField.SecretName, ok, err = parseOptionalStructTagKey[string](fStructField, tagName)
+	newField.secretName, ok, err = parseOptionalStructTagKey[string](fStructField, tagName)
 	if err != nil {
-		return Field{}, StructTagError{
+		return field{}, StructTagError{
 			Name: fStructField.Name,
 			Key:  tagName,
 			Err:  err,
@@ -112,34 +124,28 @@ func NewField(fValue reflect.Value, fStructField reflect.StructField) (Field, er
 	}
 
 	if !ok {
-		newField.SecretName = fStructField.Name
-		if newField.SplitWords {
-			newField.SecretName = splitWords(newField.SecretName)
-		}
+		newField.secretName = fStructField.Name
 	}
 
 	// Get the key value, if the type is "json" or "yaml", and setting it to the field's name
 	// if not explicitly set. Split the words if the default value was used and
 	// split_words was set to true
-	switch newField.SecretType {
-	case "json", "yaml":
-		newField.MapKeyName, ok, err = parseOptionalStructTagKey[string](fStructField, tagKey)
+	switch newField.secretType {
+	case JSON, YAML:
+		newField.mapKeyName, ok, err = parseOptionalStructTagKey[string](fStructField, tagKey)
 		if err != nil {
-			return Field{}, StructTagError{
+			return field{}, StructTagError{
 				Name: fStructField.Name,
 				Key:  tagKey,
 				Err:  err,
 			}
 		}
 		if !ok {
-			newField.MapKeyName = fStructField.Name
-			if newField.SplitWords {
-				newField.MapKeyName = splitWords(newField.MapKeyName)
-			}
+			newField.mapKeyName = fStructField.Name
 		}
 	default:
 		if _, ok = fStructField.Tag.Lookup(tagKey); ok {
-			return Field{}, StructTagError{
+			return field{}, StructTagError{
 				Name: fStructField.Name,
 				Key:  tagKey,
 				Err:  ErrSecretTypeDoesNotSupportKey,
@@ -149,66 +155,80 @@ func NewField(fValue reflect.Value, fStructField reflect.StructField) (Field, er
 
 	// Get the version value, setting it to the default, "default", if not explicitly
 	// set. Split the words if the default value was used and split_words was set to true
-	newField.SecretVersion, ok, err = parseOptionalStructTagKey[string](fStructField, tagVersion)
+	newField.secretVersion, ok, err = parseOptionalStructTagKey[string](fStructField, tagVersion)
 	if err != nil {
-		return Field{}, StructTagError{
+		return field{}, StructTagError{
 			Name: fStructField.Name,
 			Key:  tagVersion,
 			Err:  err,
 		}
 	}
 	if !ok {
-		newField.SecretVersion = DefaultVersion
+		newField.secretVersion = DefaultVersion
 	}
 
 	return newField, nil
 }
 
+func (f *field) SecretName() string {
+	if f.splitWords {
+		return splitWords(f.secretName)
+	}
+
+	return f.secretName
+}
+
+func (f *field) MapKeyName() string {
+	if f.splitWords {
+		return splitWords(f.mapKeyName)
+	}
+
+	return f.mapKeyName
+}
+
 // Name returns the resolved name of the field. If the secret type is "json" or "yaml",
 // the secret name and key name are combined. If "split_words" is true, the combination
 // of secret name and key name are transformed into uppercase, snake case.
-func (f *Field) Name() string {
-	name := f.SecretName
-
-	switch f.SecretType {
-	case "json", "yaml":
+func (f *field) Name() string {
+	switch f.secretType {
+	case JSON, YAML:
 		var delimiter string
-		if f.SplitWords {
+		if f.splitWords {
 			delimiter = "_"
 		}
 
-		name += delimiter + f.MapKeyName
+		return f.SecretName() + delimiter + f.MapKeyName()
 	}
 
-	return name
+	return f.SecretName()
 }
 
 // Set sets the field's reflect.Value with b.
-func (f *Field) Set(b []byte) error {
-	switch f.SecretType {
-	case "text":
+func (f *field) Set(b []byte) error {
+	switch f.secretType {
+	case Text:
 		return f.setText(b)
-	case "json":
+	case JSON:
 		return f.setJSON(b)
-	case "yaml":
+	case YAML:
 		return f.setYAML(b)
 	default:
-		return ErrInvalidSecretType
+		return fmt.Errorf("%w: %v", ErrInvalidSecretType, f.secretType)
 	}
 }
 
 // setText sets the field's underlying value,
 // handling the input as a "text" secret.
-func (f *Field) setText(b []byte) error {
-	const ErrFailedConvertFormat = "failed to convert secret \"%s's\" key, \"%s\" to %s: %w"
+func (f *field) setText(b []byte) error {
+	const failedConvertErrFormat = "failed to convert secret %q to %s: %w"
 
 	byteString := string(b)
 
-	valueType := f.Value.Type()
+	valueType := f.value.Type()
 
-	switch f.Value.Kind() {
+	switch f.value.Kind() {
 	case reflect.String:
-		f.Value.SetString(byteString)
+		f.value.SetString(byteString)
 
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		var (
@@ -216,7 +236,7 @@ func (f *Field) setText(b []byte) error {
 			err   error
 		)
 
-		if f.Value.Kind() == reflect.Int64 && valueType.PkgPath() == "time" && valueType.Name() == "Duration" {
+		if f.value.Kind() == reflect.Int64 && valueType.PkgPath() == "time" && valueType.Name() == "Duration" {
 			var d time.Duration
 			d, err = time.ParseDuration(byteString)
 			value = int64(d)
@@ -226,38 +246,38 @@ func (f *Field) setText(b []byte) error {
 		if err != nil {
 			t := fmt.Sprintf("int%d", valueType.Bits())
 
-			return fmt.Errorf(ErrFailedConvertFormat, f.SecretName, f.MapKeyName, t, err)
+			return fmt.Errorf(failedConvertErrFormat, f.Name(), t, err)
 		}
 
-		f.Value.SetInt(value)
+		f.value.SetInt(value)
 
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		value, err := strconv.ParseUint(byteString, 0, valueType.Bits())
 		if err != nil {
 			t := fmt.Sprintf("uint%d", valueType.Bits())
 
-			return fmt.Errorf(ErrFailedConvertFormat, f.SecretName, f.MapKeyName, t, err)
+			return fmt.Errorf(failedConvertErrFormat, f.Name(), t, err)
 		}
 
-		f.Value.SetUint(value)
+		f.value.SetUint(value)
 
 	case reflect.Bool:
 		value, err := strconv.ParseBool(byteString)
 		if err != nil {
-			return fmt.Errorf(ErrFailedConvertFormat, f.SecretName, f.MapKeyName, "bool", err)
+			return fmt.Errorf(failedConvertErrFormat, f.Name(), "bool", err)
 		}
 
-		f.Value.SetBool(value)
+		f.value.SetBool(value)
 
 	case reflect.Float32, reflect.Float64:
 		value, err := strconv.ParseFloat(byteString, valueType.Bits())
 		if err != nil {
 			t := fmt.Sprintf("float%d", valueType.Bits())
 
-			return fmt.Errorf(ErrFailedConvertFormat, f.SecretName, f.MapKeyName, t, err)
+			return fmt.Errorf(failedConvertErrFormat, f.Name(), t, err)
 		}
 
-		f.Value.SetFloat(value)
+		f.value.SetFloat(value)
 	}
 
 	return nil
@@ -265,7 +285,7 @@ func (f *Field) setText(b []byte) error {
 
 // setJSON sets the field's underlying value,
 // handling the input as a "json" secret.
-func (f *Field) setJSON(b []byte) error {
+func (f *field) setJSON(b []byte) error {
 	var secretMap map[string]string
 
 	err := json.Unmarshal(b, &secretMap)
@@ -273,16 +293,16 @@ func (f *Field) setJSON(b []byte) error {
 		return ErrInvalidJSONSecret
 	}
 
-	if value, ok := secretMap[f.MapKeyName]; ok {
+	if value, ok := secretMap[f.MapKeyName()]; ok {
 		return f.setText([]byte(value))
 	}
 
-	return fmt.Errorf("%w: secret \"%s\" missing \"%s\"", ErrSecretMissingKey, f.SecretName, f.MapKeyName)
+	return fmt.Errorf("%w: secret \"%s\" missing \"%s\"", ErrSecretMissingKey, f.SecretName(), f.MapKeyName())
 }
 
 // setYAML sets the field's underlying value,
 // handling the input as a "yaml" secret
-func (f *Field) setYAML(b []byte) error {
+func (f *field) setYAML(b []byte) error {
 	var secretMap map[string]string
 
 	err := yaml.Unmarshal(b, &secretMap)
@@ -290,11 +310,11 @@ func (f *Field) setYAML(b []byte) error {
 		return ErrInvalidYAMLSecret
 	}
 
-	if value, ok := secretMap[f.MapKeyName]; ok {
+	if value, ok := secretMap[f.MapKeyName()]; ok {
 		return f.setText([]byte(value))
 	}
 
-	return fmt.Errorf("%w: secret \"%s\" missing \"%s\"", ErrSecretMissingKey, f.SecretName, f.MapKeyName)
+	return fmt.Errorf("%w: secret \"%s\" missing \"%s\"", ErrSecretMissingKey, f.SecretName(), f.MapKeyName())
 }
 
 // parseOptionalStructTagKey parses the provided key's value from the struct field,
@@ -305,17 +325,21 @@ func parseOptionalStructTagKey[T any](structField reflect.StructField, key strin
 
 	if raw, ok = structField.Tag.Lookup(key); ok { // If key present
 		switch any(value).(type) {
+		case secretType:
+			value, ok = any(secretType(raw)).(T)
 		case string:
 			value = any(raw).(T)
 		case int:
-			i, err := strconv.Atoi(raw)
+			var i int
+			i, err = strconv.Atoi(raw)
 			if err != nil {
 				break
 			}
 
 			value = any(i).(T)
 		case bool:
-			b, err := strconv.ParseBool(raw)
+			var b bool
+			b, err = strconv.ParseBool(raw)
 			if err != nil {
 				break
 			}
